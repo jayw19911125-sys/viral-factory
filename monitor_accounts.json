@@ -1,0 +1,22 @@
+{
+  "version": "1.1",
+  "last_updated": "2026-06-08",
+  "description": "好創整合行銷 爆款短影音監控帳號清單（僅含已驗證可抓取帳號）",
+  "tiktok_accounts": [
+    {"handle": "wille_wang",    "url": "https://www.tiktok.com/@wille_wang",    "category": "自媒體/短影音教學", "desc": "短影音教學、自媒體變現"},
+    {"handle": "enfin0529",     "url": "https://www.tiktok.com/@enfin0529",     "category": "創業/自媒體",       "desc": "自媒體流量與變現教學"},
+    {"handle": "ujay1103",      "url": "https://www.tiktok.com/@ujay1103",      "category": "創業/商業思維",     "desc": "私域社群發售與TikTok賺錢"},
+    {"handle": "lin.na_8",      "url": "https://www.tiktok.com/@lin.na_8",      "category": "短影音教學",        "desc": "短影音IP操盤手"},
+    {"handle": "specsome",      "url": "https://www.tiktok.com/@specsome",      "category": "搞笑/劇情",         "desc": "戲劇式搞笑短片，節奏明快"},
+    {"handle": "nonstop_rave",  "url": "https://www.tiktok.com/@nonstop_rave",  "category": "搞笑/劇情",         "desc": "搞笑團體、情侶搞笑短劇"},
+    {"handle": "zuibabibi_",    "url": "https://www.tiktok.com/@zuibabibi_",    "category": "搞笑/劇情",         "desc": "原創短劇與幽默影片"},
+    {"handle": "chuanlee666666","url": "https://www.tiktok.com/@chuanlee666666","category": "劇情/微電影",       "desc": "短劇創作者、情感路線配音短片"},
+    {"handle": "tongsyue",      "url": "https://www.tiktok.com/@tongsyue",      "category": "劇情/搞笑",         "desc": "學生戲劇、搞笑短劇"}
+  ],
+  "instagram_accounts": [],
+  "notes": {
+    "tiktok": "以上 9 個帳號均已測試 yt-dlp 可抓取，verified=true",
+    "instagram": "IG 需要登入 cookie，待子權完成 IG 登入後自動補充",
+    "failed_accounts": ["cw.lin_", "sparkline2025", "kueilanverse", "frankchiu.io"]
+  }
+}

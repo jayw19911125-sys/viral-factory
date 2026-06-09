@@ -1,0 +1,24 @@
+# 暫存音頻與影片
+*.mp3
+*.mp4
+*.webm
+*.m4a
+
+# 每週累積數據（含影片 URL，不上傳）
+weekly_data.json
+
+# 手動待拆清單（個人使用）
+manual_queue.txt
+
+# Python 暫存
+__pycache__/
+*.pyc
+*.pyo
+
+# 日誌
+logs/
+*.log
+
+# 環境變數（API Keys 不上傳）
+.env
+*.env
