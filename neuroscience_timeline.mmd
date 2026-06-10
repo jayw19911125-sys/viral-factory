@@ -1,0 +1,27 @@
+graph TD
+    classDef hook fill:#ff9999,stroke:#333,stroke-width:2px;
+    classDef body fill:#99ccff,stroke:#333,stroke-width:2px;
+    classDef cta fill:#99ff99,stroke:#333,stroke-width:2px;
+    
+    A[第 0-3 秒: 杏仁核劫持<br>生存本能/驚喜/恐懼]:::hook --> B[第 3-5 秒: 多巴胺預期迴路<br>製造資訊缺口]:::hook
+    B --> C[第 5-15 秒: 鏡像神經元共鳴<br>情緒傳染/動作模仿]:::body
+    C --> D[第 15-30 秒: 認知失調<br>打破常識/引發思考]:::body
+    D --> E[第 30-45 秒: 多巴胺釋放<br>填補缺口/獲得解答]:::body
+    E --> F[第 45-60 秒: 損失厭惡<br>不行動的代價]:::cta
+    F --> G[第 60+ 秒: 互惠原則<br>提供價值要求回報]:::cta
+    
+    subgraph Hook 階段
+    A
+    B
+    end
+    
+    subgraph Body 階段
+    C
+    D
+    E
+    end
+    
+    subgraph CTA 階段
+    F
+    G
+    end

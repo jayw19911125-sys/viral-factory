@@ -1,0 +1,55 @@
+flowchart TD
+    subgraph 觸發["⏰ 每日 09:00 自動觸發"]
+        CRON["排程 daily_run.py"]
+    end
+
+    subgraph 來源A["📱 來源A：有機短影音"]
+        ACC["monitor_accounts.json\n（監控帳號清單）"]
+        FETCH["trending_fetcher.py\n抓取最新影片 + 異常偵測"]
+        MANUAL["manual_queue.txt\n手動加入清單"]
+        ORGANIC["有機影片 URL × 4支"]
+        ACC --> FETCH
+        MANUAL --> ORGANIC
+        FETCH --> ORGANIC
+    end
+
+    subgraph 來源B["📢 來源B：Meta 廣告素材"]
+        ADLIB["Meta Ad Library API\n搜尋台灣市場廣告"]
+        FILTER["自動過濾無效廣告\n投放<14天 / 無影片 / 已停播"]
+        SCORE["成效分數排序\n投放天數 / CTA / 導購型"]
+        META_URL["Meta廣告 URL × 2支"]
+        ADLIB --> FILTER --> SCORE --> META_URL
+    end
+
+    subgraph 核心拆解["🏭 核心拆解引擎 viral_factory.py"]
+        DL["yt-dlp\n下載影片音頻"]
+        WHISPER["Whisper API\n語音轉文字"]
+        GPT["GPT-4.1-mini\n頂尖方法論拆解\n12個欄位"]
+        DL --> WHISPER --> GPT
+    end
+
+    subgraph 輸出["📤 輸出"]
+        NOTION["Notion 爆款拆解庫\n每支影片一頁"]
+        SLACK["Slack 通知阿韋\n每日日報"]
+        NOTION_PAGE["每頁包含：\n🎣 鉤子類型+可套用公式\n🔨 視覺錘×語言釘\n🎭 人設定位\n📐 影片結構\n💥 爆款原因\n📊 廣告投放潛力\n🏭 產業適用性\n⚠️ 無效因素識別"]
+    end
+
+    subgraph 週報["📊 每週五額外執行"]
+        WEEKLY["weekly_report.py\n爆款規律分析\n發送 Slack 週報"]
+    end
+
+    CRON --> ORGANIC
+    CRON --> META_URL
+    ORGANIC --> DL
+    META_URL --> DL
+    GPT --> NOTION
+    GPT --> SLACK
+    NOTION --> NOTION_PAGE
+    CRON -.週五.- WEEKLY
+
+    style 觸發 fill:#fff3cd,stroke:#ffc107
+    style 來源A fill:#d4edda,stroke:#28a745
+    style 來源B fill:#cce5ff,stroke:#0066cc
+    style 核心拆解 fill:#f8d7da,stroke:#dc3545
+    style 輸出 fill:#e2d9f3,stroke:#6f42c1
+    style 週報 fill:#fde8d8,stroke:#fd7e14

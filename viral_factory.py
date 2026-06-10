@@ -112,7 +112,17 @@ ANALYSIS_PROMPT = """
   
   "熱門音樂": "音樂風格、情緒功能、為什麼選這首（若無法判斷填：需人工補充）",
   
-  "類別標籤": ["從以下選項中選擇最符合的（可多選）：餐飲、婚禮、家具、知識、搞笑、劇情、教學、美容、電商、服務業、廣告素材、其他"]
+  "類別標籤": ["從以下選項中選擇最符合的（可多選，必須從此清單選擇）：美妝保養、餐飲食品、服飾配件、保健醫療、數位課程、服務業、家居家具、婚禮攝影、3C電子、通用"],
+
+  "鉤子大類": "必須從以下選項選一個：疑問式、否定式、衝突式、數字式、警告式、揭秘式、前後對比式、大膽宣言式",
+
+  "視覺錘類型": "必須從以下選項選一個：道具型、構圖型、色彩型、字幕型、人物型、場景型、動作型",
+
+  "CTA類型": "必須從以下選項選一個：留言誘餌、私訊獲取、追蹤鉤子、到店導流、加LINE、預約、點連結購買、填表單",
+
+  "神經科學機制": "必須從以下選項選一個（最主要的那個）：杏仁核劫持、多巴胺預期、鏡像神經元、認知失調、損失厭惡、社交認同",
+
+  "廣告投放潛力": "必須從以下選項選一個：A級直接可投、B級小改可投、C級需大改、不適合投廣告"
 }}
 
 逐字稿如下：
@@ -232,9 +242,31 @@ def write_to_notion_via_mcp(url: str, platform: str, transcript: str, analysis: 
     tags = analysis.get("類別標籤", ["其他"])
     if isinstance(tags, str):
         tags = [tags]
-    valid_tags = ["餐飲", "婚禮", "家具", "知識", "搞笑", "劇情", "教學", "其他"]
-    tags = [t for t in tags if t in valid_tags] or ["其他"]
+    valid_tags = ["美妝保養", "餐飲食品", "服飾配件", "保健醫療", "數位課程", "服務業", "家居家具", "婚禮攝影", "3C電子", "通用"]
+    tags = [t for t in tags if t in valid_tags] or ["通用"]
     tags_json = json.dumps(tags, ensure_ascii=False)
+
+    # 結構化標籤欄位（對應 Notion 選項）
+    valid_hook_types = ["疑問式", "否定式", "衝突式", "數字式", "警告式", "揭秘式", "前後對比式", "大膽宣言式"]
+    valid_visual_hammer = ["道具型", "構圖型", "色彩型", "字幕型", "人物型", "場景型", "動作型"]
+    valid_cta_types = ["留言誘餌", "私訊獲取", "追蹤鉤子", "到店導流", "加LINE", "預約", "點連結購買", "填表單"]
+    valid_neuro = ["杏仁核劫持", "多巴胺預期", "鏡像神經元", "認知失調", "損失厭惡", "社交認同"]
+    valid_ad_potential = ["A級直接可投", "B級小改可投", "C級需大改", "不適合投廣告"]
+
+    hook_type = analysis.get("鉤子大類", "")
+    hook_type = hook_type if hook_type in valid_hook_types else None
+
+    visual_hammer_type = analysis.get("視覺錘類型", "")
+    visual_hammer_type = visual_hammer_type if visual_hammer_type in valid_visual_hammer else None
+
+    cta_type = analysis.get("CTA類型", "")
+    cta_type = cta_type if cta_type in valid_cta_types else None
+
+    neuro_type = analysis.get("神經科學機制", "")
+    neuro_type = neuro_type if neuro_type in valid_neuro else None
+
+    ad_potential = analysis.get("廣告投放潛力", "")
+    ad_potential = ad_potential if ad_potential in valid_ad_potential else None
 
     valid_platforms = ["TikTok", "Reels", "Shorts", "FB", "抖音", "小紅書", "其他"]
     if platform not in valid_platforms:
@@ -289,7 +321,12 @@ def write_to_notion_via_mcp(url: str, platform: str, transcript: str, analysis: 
                     "熱門音樂": analysis.get("熱門音樂", "需人工補充"),
                     "是否已借鏡": "__NO__",
                     "類別標籤": tags_json,
-                    "入庫日期": datetime.now().strftime("%Y-%m-%d")
+                    "來源類型": "Meta廣告" if "facebook.com/ads" in url or "meta" in url.lower() else "有機熱門",
+                    **({"鉤子大類": hook_type} if hook_type else {}),
+                    **({"視覺錘類型": visual_hammer_type} if visual_hammer_type else {}),
+                    **({"CTA類型": cta_type} if cta_type else {}),
+                    **({"神經科學機制": neuro_type} if neuro_type else {}),
+                    **({"廣告投放潛力": ad_potential} if ad_potential else {})
                 }
             }
         ]

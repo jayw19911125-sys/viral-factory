@@ -1,0 +1,22 @@
+graph TD
+    classDef top fill:#f9d0c4,stroke:#333,stroke-width:2px;
+    classDef mid fill:#f8edeb,stroke:#333,stroke-width:2px;
+    classDef bot fill:#e2ece9,stroke:#333,stroke-width:2px;
+    classDef core fill:#dfe7fd,stroke:#333,stroke-width:2px;
+
+    A[公域流量層: 短影音/貼文<br>目標: 破圈、抓取注意力]:::top --> B[私域引流層: 免費誘餌/LINE社群<br>目標: 獲取名單、建立信任]:::mid
+    B --> C[低價入門產品: $299-$999<br>目標: 轉換付費習慣]:::bot
+    C --> D[高價核心服務: $3000+ 課程/顧問<br>目標: 主要利潤來源]:::core
+    
+    subgraph 內容矩陣
+    A
+    end
+    
+    subgraph 信任階梯
+    B
+    C
+    end
+    
+    subgraph 商業閉環
+    D
+    end
