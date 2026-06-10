@@ -239,11 +239,41 @@ def check_duplicate_via_mcp(url: str) -> bool:
 
 def write_to_notion_via_mcp(url: str, platform: str, transcript: str, analysis: dict) -> str:
     """透過 Notion MCP 寫入爆款拆解庫，回傳頁面 URL"""
-    tags = analysis.get("類別標籤", ["其他"])
-    if isinstance(tags, str):
-        tags = [tags]
-    valid_tags = ["美妝保養", "餐飲食品", "服飾配件", "保健醫療", "數位課程", "服務業", "家居家具", "婚禮攝影", "3C電子", "通用"]
-    tags = [t for t in tags if t in valid_tags] or ["通用"]
+    # 產業分類 → Notion 現有選項 對照表
+    # Notion 類別標籤現有選項：餐飲/婚禮/家具/知識/搞笑/劇情/教學/其他
+    # GPT 輸出的產業分類 → 對應到最接近的 Notion 選項
+    INDUSTRY_TO_NOTION = {
+        "美妝保養": "其他",
+        "餐飲食品": "餐飲",
+        "服飾配件": "其他",
+        "保健醫療": "其他",
+        "數位課程": "知識",
+        "服務業": "其他",
+        "家居家具": "家具",
+        "婚禮攝影": "婚禮",
+        "3C電子": "其他",
+        "寵物": "其他",
+        "通用": "其他",
+        # Notion 原生選項直接對應
+        "餐飲": "餐飲",
+        "婚禮": "婚禮",
+        "家具": "家具",
+        "知識": "知識",
+        "搞笑": "搞笑",
+        "劇情": "劇情",
+        "教學": "教學",
+        "其他": "其他",
+    }
+    NOTION_VALID_TAGS = ["餐飲", "婚禮", "家具", "知識", "搞笑", "劇情", "教學", "其他"]
+
+    raw_tags = analysis.get("類別標籤", ["其他"])
+    if isinstance(raw_tags, str):
+        raw_tags = [raw_tags]
+    # 轉換產業分類為 Notion 可接受的選項
+    tags = list(dict.fromkeys(
+        INDUSTRY_TO_NOTION.get(t, "其他") for t in raw_tags
+        if INDUSTRY_TO_NOTION.get(t, "其他") in NOTION_VALID_TAGS
+    )) or ["其他"]
     tags_json = json.dumps(tags, ensure_ascii=False)
 
     # 結構化標籤欄位（對應 Notion 選項）
