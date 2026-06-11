@@ -21,7 +21,7 @@ from openai import OpenAI
 # Whisper 專用（直接呼叫 OpenAI 原始 API）
 WHISPER_API_KEY = os.environ.get(
     "WHISPER_API_KEY",
-    "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"
+    os.environ.get("OPENAI_API_KEY", "")
 )
 
 # Notion 資料庫 ID（02 爆款拆解庫）
