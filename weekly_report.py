@@ -14,7 +14,7 @@ from openai import OpenAI
 
 # ─── 設定區 ───────────────────────────────────────────────
 NOTION_DB_ID     = "82097a06-fae5-83bd-a8c3-87236d3713aa"
-SLACK_AUTO_CH    = "C0AUH4QKF5M"   # #自動化訊息來源（唯一推播頻道）
+SLACK_TEAM_CH    = "C0AQG307XJT"   # #all-團隊主頻道
 
 WEEKLY_ANALYSIS_PROMPT = """
 你是好創整合行銷的短影音策略顧問，專門分析台灣市場的爆款短影音規律。
@@ -183,22 +183,19 @@ def send_weekly_report_to_slack(analysis: dict, count: int, week_str: str):
         f"_完整拆解庫：https://app.notion.com/p/82097a06fae583bda8c387236d3713aa_"
     )
 
-    import tempfile, os
-    payload = {"channel_id": SLACK_AUTO_CH, "message": msg}
-    with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False, encoding='utf-8') as f:
-        json.dump(payload, f, ensure_ascii=False)
-        fname = f.name
-    try:
-        result = subprocess.run(
-            f'manus-mcp-cli tool call slack_send_message --server slack --input "$(cat {fname})"',
-            capture_output=True, text=True, timeout=30, shell=True
-        )
-        if "message_link" not in result.stdout:
-            print(f"Slack 發送失敗：{result.stdout[:100]}")
-            return False
-    finally:
-        os.unlink(fname)
-    print("Slack 週報已發送至 #自動化訊息來源")
+    cmd = [
+        "manus-mcp-cli", "tool", "call", "slack_send_message",
+        "--server", "slack",
+        "--input", json.dumps({
+            "channel_id": SLACK_TEAM_CH,
+            "message": msg
+        })
+    ]
+    result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
+    if result.returncode != 0:
+        print(f"Slack 發送失敗：{result.stderr[:100]}")
+        return False
+    print("Slack 週報已發送至 #all-團隊主頻道")
     return True
 
 
@@ -221,18 +218,12 @@ def run_weekly_report():
             f"⚠️ 本週入庫資料不足（{len(entries)} 支），無法進行規律分析。\n"
             f"建議確認每日拆解排程是否正常執行。"
         )
-        import tempfile, os
-        payload2 = {"channel_id": SLACK_AUTO_CH, "message": msg}
-        with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False, encoding='utf-8') as f:
-            json.dump(payload2, f, ensure_ascii=False)
-            fname2 = f.name
-        try:
-            subprocess.run(
-                f'manus-mcp-cli tool call slack_send_message --server slack --input "$(cat {fname2})"',
-                capture_output=True, text=True, timeout=30, shell=True
-            )
-        finally:
-            os.unlink(fname2)
+        cmd = [
+            "manus-mcp-cli", "tool", "call", "slack_send_message",
+            "--server", "slack",
+            "--input", json.dumps({"channel_id": SLACK_TEAM_CH, "message": msg})
+        ]
+        subprocess.run(cmd, capture_output=True, text=True, timeout=30)
         print(f"資料不足（{len(entries)} 支），已發送提醒至 Slack")
         return
 

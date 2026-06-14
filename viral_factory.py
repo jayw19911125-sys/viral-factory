@@ -28,7 +28,9 @@ WHISPER_API_KEY = os.environ.get(
 NOTION_DB_ID = "82097a06-fae5-83bd-a8c3-87236d3713aa"
 
 # Slack 設定
-SLACK_AUTO_CH    = "C0AUH4QKF5M"   # #自動化訊息來源（唯一推播頻道）
+SLACK_AWEI_ID    = "U0B4FG0ER89"   # 阿韋 User ID（用於 @mention）
+SLACK_TEAM_CH    = "C0AQG307XJT"   # #all-團隊主頻道
+SLACK_AUTO_CH    = "C0AUH4QKF5M"   # #自動化訊息來源（影音類別）
 
 # ─── GPT-4o 拆解 Prompt（v3.0 頂尖方法論版）────────────────
 # 基於視覺錘×語言釘×鉤子設計系統×Meta廣告投放邏輯建立
@@ -382,21 +384,19 @@ def write_to_notion_via_mcp(url: str, platform: str, transcript: str, analysis: 
 
 
 def send_slack_dm(message: str, channel: str = None):
-    """透過 Slack MCP 發送訊息（tempfile 寫法，永遠不會有 shell 引號問題）"""
-    target = channel or SLACK_AUTO_CH
-    payload = {"channel_id": target, "message": message}
-    with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False, encoding='utf-8') as f:
-        json.dump(payload, f, ensure_ascii=False)
-        fname = f.name
-    try:
-        result = subprocess.run(
-            f'manus-mcp-cli tool call slack_send_message --server slack --input "$(cat {fname})"',
-            capture_output=True, text=True, timeout=30, shell=True
-        )
-        if "message_link" not in result.stdout:
-            print(f"  ⚠️  Slack 發送失敗：{result.stdout[:100]}")
-    finally:
-        os.unlink(fname)
+    """透過 Slack MCP 發送訊息"""
+    target = channel or SLACK_AWEI_ID
+    cmd = [
+        "manus-mcp-cli", "tool", "call", "slack_send_message",
+        "--server", "slack",
+        "--input", json.dumps({
+            "channel_id": target,
+            "message": message
+        })
+    ]
+    result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
+    if result.returncode != 0:
+        print(f"  ⚠️  Slack 發送失敗：{result.stderr[:100]}")
 
 
 # ─── 主流程 ───────────────────────────────────────────────
@@ -448,10 +448,11 @@ def process_single_video(url: str, whisper_available: bool = True) -> dict:
             print(f"  寫入完成：{notion_url}")
 
             # Step 5: Slack 通知
-            print(f"  [5/5] Slack 通知 #自動化訊息來源...")
+            print(f"  [5/5] Slack 通知（#自動化訊息來源 @阿韋）...")
             today = datetime.now().strftime("%Y-%m-%d")
             msg = (
-                f"🔥 *爆款入庫* | {today}\n\n"
+                f"🔥 *爆款入庫* | {today}\n"
+                f"<@{SLACK_AWEI_ID}> 新素材入庫，請查收\n\n"
                 f"*平台：* {platform}\n"
                 f"*標題：* {analysis.get('影片標題或主題', '未命名')}\n"
                 f"*鉤子類型：* {analysis.get('鉤子類型與設計', {}).get('鉤子類型', '') if isinstance(analysis.get('鉤子類型與設計'), dict) else ''}\n"
@@ -459,7 +460,7 @@ def process_single_video(url: str, whisper_available: bool = True) -> dict:
                 f"*廣告潛力：* {analysis.get('廣告投放潛力評估', {}).get('適合投廣告嗎', '') if isinstance(analysis.get('廣告投放潛力評估'), dict) else ''}\n"
                 f"*Notion：* {notion_url}"
             )
-            send_slack_dm(msg)
+            send_slack_dm(msg, channel=SLACK_AUTO_CH)  # 發到 #自動化訊息來源
             print(f"  通知已發送")
 
             print(f"\n  ✅ 完成！")
@@ -500,7 +501,9 @@ def process_batch(urls: list, whisper_available: bool = True) -> list:
         lines.append(f"{i}. [{r.get('platform','')}] {r.get('title','')}")
         lines.append(f"   → {r.get('notion_url','')}")
 
-    send_slack_dm("\n".join(lines))
+    # 日報加上 @阿韋 標註，發到 #自動化訊息來源
+    lines.insert(1, f"<@{SLACK_AWEI_ID}> 今日入庫日報\n")
+    send_slack_dm("\n".join(lines), channel=SLACK_AUTO_CH)
 
     print(f"\n{'='*55}")
     print(f"✅ 完成：{len(success_items)} 支 | ❌ 失敗：{fail_count} 支")

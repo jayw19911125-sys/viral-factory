@@ -1,0 +1,49 @@
+graph TB
+    subgraph INPUT["📥 素材來源（每日雙軌輸入）"]
+        A1["🎵 TikTok 熱門帳號\n每日 5 支有機爆款"]
+        A2["📱 Instagram Reels\n每日 5 支有機爆款"]
+        A3["📢 Meta 廣告庫\n按產業輪流抓取\n（美容/餐飲/服飾/健身...）"]
+    end
+
+    subgraph AI["🤖 AI 自動拆解引擎（每日 09:00 自動執行）"]
+        B1["GPT-4.1-mini\n12 欄位深度拆解\n+ 6 結構化標籤"]
+        B2["智慧評分系統\n1～5 分評級\n判斷 IP型 / 導購型"]
+        B3["素材自動分配器\n按類型分送各庫房"]
+    end
+
+    subgraph NOTION["📚 Notion 庫房系統（永久資產沉澱）"]
+        C1["02｜爆款拆解庫\n所有影片完整拆解"]
+        C2["03｜開頭鉤子庫\n鉤子公式集"]
+        C3["04｜結尾呼籲庫\nCTA 公式集"]
+        C4["05｜腳本結構庫\n敘事框架集"]
+        C5["06｜視覺錘庫\n視覺符號集"]
+        C6["07｜語言釘庫\n品牌金句集"]
+        C7["35｜已驗證熱門腳本庫\n高分腳本（4-5分）\nIP型 / 導購型分庫"]
+    end
+
+    subgraph OUTPUT["📤 輸出與通知"]
+        D1["Slack 日報\n通知阿韋"]
+        D2["Slack 週報\n每週五發送全團隊"]
+        D3["手冊自動更新\n每週一更新並發送 PDF"]
+    end
+
+    A1 --> B1
+    A2 --> B1
+    A3 --> B1
+    B1 --> B2
+    B2 --> B3
+    B1 --> C1
+    B3 --> C2
+    B3 --> C3
+    B3 --> C4
+    B3 --> C5
+    B3 --> C6
+    B2 -->|"4-5分高分"| C7
+    B3 --> D1
+    C1 --> D2
+    C1 --> D3
+
+    style INPUT fill:#E8F4FD,stroke:#2196F3,stroke-width:2px
+    style AI fill:#FFF3E0,stroke:#FF9800,stroke-width:2px
+    style NOTION fill:#E8F5E9,stroke:#4CAF50,stroke-width:2px
+    style OUTPUT fill:#F3E5F5,stroke:#9C27B0,stroke-width:2px

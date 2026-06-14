@@ -1,0 +1,38 @@
+graph TD
+    INPUT["🎬 一支拆解完成的影片\n（含 12 欄位分析結果）"] --> GPT
+
+    GPT["🤖 GPT-4.1-mini 評分\n綜合分析 6 個維度"] --> SCORE
+
+    subgraph CRITERIA["評分依據（6 個維度）"]
+        C1["① 鉤子強度\n前 3 秒能否讓人停下來？"]
+        C2["② 完播率潛力\n中段有沒有留存機制？"]
+        C3["③ 互動設計\n有沒有引發留言/分享的設計？"]
+        C4["④ 可複製性\n好創客戶能不能直接套用？"]
+        C5["⑤ 視覺錘強度\n品牌記憶點是否清晰？"]
+        C6["⑥ CTA 效果\n結尾行動呼籲是否有力？"]
+    end
+
+    SCORE["📊 評分結果"] --> S5
+    SCORE --> S4
+    SCORE --> S3
+    SCORE --> S2
+    SCORE --> S1
+
+    S5["⭐⭐⭐⭐⭐ 5 分｜頂尖爆款\n六個維度全部優秀\n→ 進入 35 庫（高優先複製）"]
+    S4["⭐⭐⭐⭐ 4 分｜優秀素材\n大部分維度表現良好\n→ 進入 35 庫（值得參考）"]
+    S3["⭐⭐⭐ 3 分｜中等素材\n有亮點但也有明顯弱點\n→ 只進 02 庫（參考用）"]
+    S2["⭐⭐ 2 分｜待改善\n多個維度表現不佳\n→ 只進 02 庫（了解弱點）"]
+    S1["⭐ 1 分｜不建議參考\n整體表現差\n→ 只進 02 庫（反面教材）"]
+
+    TYPE["同時判斷影片類型"]
+    SCORE --> TYPE
+
+    TYPE --> IP["🎭 IP 型\n個人品牌/自媒體類\n特徵：分享觀點/故事/教學\n目標：建立信任與追蹤"]
+    TYPE --> SHOP["🛒 導購型\n商業銷售類\n特徵：展示產品/促銷/見證\n目標：直接帶動購買"]
+
+    style S5 fill:#FF9800,color:#fff
+    style S4 fill:#4CAF50,color:#fff
+    style S3 fill:#2196F3,color:#fff
+    style S2 fill:#9E9E9E,color:#fff
+    style S1 fill:#F44336,color:#fff
+    style CRITERIA fill:#FFF8E1,stroke:#FFC107
