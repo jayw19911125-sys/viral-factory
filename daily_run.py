@@ -38,6 +38,7 @@ from viral_factory import process_batch
 from weekly_report import run_weekly_report
 from meta_ads_fetcher import get_meta_ad_urls_simple
 from script_distributor import distribute_video
+from manual_version_tracker import auto_detect_and_update
 
 # ─── 日誌設定 ─────────────────────────────────────────────
 LOG_DIR = Path("/home/ubuntu/viral_factory/logs")
@@ -173,6 +174,27 @@ def main():
             logger.info("\n[週五任務] 開始執行爆款規律週報分析...")
             run_weekly_report()
             logger.info("週報分析完成，已發送至 Slack 團隊主頻道")
+
+        # ─── 手冊版本自動更新 ─────────────────────────────────
+        # 每次拆解完成後自動偵測：
+        #   - 若腳本有變動 → bump minor（功能更新）並發 Slack 通知
+        #   - 若只有資料更新 → bump patch（靜默更新，不發通知）
+        logger.info("\n[手冊更新] 自動偵測版本變動...")
+        try:
+            patch_changes = [
+                f"今日拆解：成功 {len(success_results)} 支（有機 + Meta廣告）",
+                f"評分分佈：{score_summary}",
+                f"高分入庫（35庫）：{high_score_count} 支"
+            ]
+            new_version = auto_detect_and_update(
+                reason="每日拆解資料更新",
+                changes=patch_changes,
+                notify_slack=True  # minor 版才會發通知，patch 靜默
+            )
+            logger.info(f"手冊已更新至 v{new_version}")
+        except Exception as e:
+            logger.warning(f"手冊版本更新失敗（不影響主流程）：{e}")
+        # ─────────────────────────────────────────────────────
 
     except Exception as e:
         logger.error(f"排程執行失敗：{e}", exc_info=True)
