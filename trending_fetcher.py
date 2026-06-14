@@ -47,40 +47,74 @@ def load_monitor_accounts() -> list:
 def fetch_account_videos(account: dict, max_count: int = 10) -> list:
     """
     抓取單一帳號的最新影片清單（不下載，只取 metadata）
-    回傳：[{"url": "...", "title": "...", "view_count": 0, "timestamp": "..."}]
+
+    修復缺陷8：yt-dlp --flat-playlist 模式下 view_count 幾乎永遠是 0，
+    因為 TikTok 的觀看數需要實際請求影片頁面才能取得。
+
+    改為兩段式抓取：
+    1. --flat-playlist 快速取得 URL + title 清單
+    2. 對每支影片單獨執行 yt-dlp --dump-json 取得真實 view_count
+       （只取前 max_count 支，每支 timeout 15 秒，失敗則 view_count=0）
+
+    回傳：[{"url": "...", "title": "...", "view_count": N, "timestamp": "..."}]
     """
-    cmd = [
+    # ── 第一段：取 URL + title 清單 ──
+    cmd_list = [
         "yt-dlp",
         "--flat-playlist",
         "--playlist-end", str(max_count),
-        "--print", "%(webpage_url)s\t%(title)s\t%(view_count)s\t%(timestamp)s",
+        "--print", "%(webpage_url)s\t%(title)s\t%(timestamp)s",
         "--no-warnings",
         "--ignore-errors",
         account["url"]
     ]
-    result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
-    videos = []
+    result = subprocess.run(cmd_list, capture_output=True, text=True, timeout=45)
+    raw_videos = []
     for line in result.stdout.strip().split("\n"):
         if not line.strip():
             continue
         parts = line.split("\t")
-        if len(parts) < 2:
+        if len(parts) < 1:
             continue
         url = parts[0].strip()
         if not url.startswith("http"):
             continue
         title = parts[1].strip() if len(parts) > 1 else ""
+        timestamp = parts[2].strip() if len(parts) > 2 else ""
+        raw_videos.append({"url": url, "title": title, "timestamp": timestamp})
+
+    # ── 第二段：對每支影片取真實 view_count ──
+    videos = []
+    for v in raw_videos[:max_count]:
         view_count = 0
-        if len(parts) > 2 and parts[2].strip().isdigit():
-            view_count = int(parts[2].strip())
-        timestamp = parts[3].strip() if len(parts) > 3 else ""
+        try:
+            cmd_detail = [
+                "yt-dlp",
+                "--dump-json",
+                "--no-playlist",
+                "--no-warnings",
+                "--ignore-errors",
+                v["url"]
+            ]
+            detail_result = subprocess.run(
+                cmd_detail, capture_output=True, text=True, timeout=15
+            )
+            if detail_result.returncode == 0 and detail_result.stdout.strip():
+                info = json.loads(detail_result.stdout.strip().split("\n")[0])
+                view_count = info.get("view_count") or 0
+                # 若 title 為空，用 detail 補充
+                if not v["title"]:
+                    v["title"] = info.get("title", "")
+        except Exception:
+            pass  # 取不到 view_count 就用 0，不影響主流程
+
         videos.append({
-            "url": url,
-            "title": title,
+            "url": v["url"],
+            "title": v["title"],
             "view_count": view_count,
-            "timestamp": timestamp,
+            "timestamp": v["timestamp"],
             "handle": account["handle"],
-            "platform": "tiktok" if "tiktok.com" in url else "instagram",
+            "platform": "tiktok" if "tiktok.com" in v["url"] else "instagram",
             "category": account.get("category", ""),
             "fetched_at": datetime.now().isoformat()
         })

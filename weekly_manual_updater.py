@@ -41,7 +41,8 @@ NOTION_DB = {
     "35_導購型":    "461772ac895a4f8cb5a7f5305ecc521b",
 }
 
-MANUAL_PATH = Path("/home/ubuntu/viral_factory/viral_factory_v3_manual.md")
+# 修復缺陷4：統一使用 notion_visual_manual.md（與 manual_version_tracker.py 一致）
+MANUAL_PATH = Path("/home/ubuntu/viral_factory/notion_visual_manual.md")
 PDF_PATH    = Path("/home/ubuntu/viral_factory/爆款短影音拆解工廠v3.0_團隊操作手冊.pdf")
 DATA_DIR    = Path("/home/ubuntu/viral_factory/data")
 
@@ -176,32 +177,28 @@ def generate_weekly_summary(stats: dict, week_str: str) -> str:
 
 
 def update_manual_version(stats: dict, week_str: str, summary: str):
-    """更新手冊的版本號與本週統計數據"""
-    content = MANUAL_PATH.read_text(encoding="utf-8")
-    today = datetime.now().strftime("%Y 年 %m 月 %d 日")
+    """
+    更新手冊版本（修復缺陷4、9）：
+    - 不再自己操作 Markdown，改為呼叫 manual_version_tracker 統一處理
+    - 版本號改為語意化遞增（minor），不再用固定的 v3.0-auto
+    """
+    import sys
+    sys.path.insert(0, str(Path(__file__).parent))
+    from manual_version_tracker import auto_detect_and_update
 
-    # 更新最新版本日期
-    content = re.sub(
-        r"\*\*最新版本\*\*：.*",
-        f"**最新版本**：v3.0 ｜ {today}（自動更新）",
-        content
+    high_score_count = stats.get('35_IP型', 0) + stats.get('35_導購型', 0)
+    changes = [
+        f"週報自動更新：本週新增拆解 {stats.get('02_拆解庫', 0)} 筆",
+        f"高分腳本入庫 {high_score_count} 支（IP型 {stats.get('35_IP型', 0)} / 導購型 {stats.get('35_導購型', 0)}）",
+        f"本週摘要：{summary[:50]}..."
+    ]
+
+    new_version = auto_detect_and_update(
+        reason=f"週報自動更新 {week_str}",
+        changes=changes,
+        notify_slack=True  # 週報更新屬於 minor，發 Slack 通知
     )
-
-    # 更新版本紀錄表格（新增本週自動更新記錄）
-    new_row = (
-        f"| v3.0-auto | {datetime.now().strftime('%Y-%m-%d')} | "
-        f"自動更新：本週新增拆解 {stats.get('02_拆解庫', 0)} 筆，"
-        f"高分腳本入庫 {stats.get('35_IP型', 0) + stats.get('35_導購型', 0)} 支 |"
-    )
-
-    # 在版本紀錄表格末尾插入新行
-    content = content.replace(
-        "| v3.0 | 2026-06-11 | 新增智慧評分系統（1-5分）、素材自動分配（03~07/35庫）、日報統計 |",
-        "| v3.0 | 2026-06-11 | 新增智慧評分系統（1-5分）、素材自動分配（03~07/35庫）、日報統計 |\n" + new_row
-    )
-
-    MANUAL_PATH.write_text(content, encoding="utf-8")
-    print(f"  手冊版本已更新：{today}")
+    print(f"  手冊版本已更新至 v{new_version}")
 
 
 def convert_to_pdf():
