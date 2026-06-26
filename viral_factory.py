@@ -180,18 +180,17 @@ def download_video(url: str, output_dir: str) -> str:
 
 
 def transcribe_audio(audio_path: str) -> str:
-    """用 Whisper API 轉錄音頻（直接呼叫 OpenAI 原始 API）"""
-    client = OpenAI(
-        api_key=WHISPER_API_KEY,
-        base_url="https://api.openai.com/v1"
+    """用 manus-speech-to-text 轉錄音頻（沙盒內建工具，不需要 OpenAI Key）"""
+    result = subprocess.run(
+        ["manus-speech-to-text", audio_path],
+        capture_output=True, text=True, timeout=180
     )
-    with open(audio_path, "rb") as f:
-        result = client.audio.transcriptions.create(
-            model="whisper-1",
-            file=f,
-            language="zh"
-        )
-    return result.text
+    if result.returncode != 0:
+        raise RuntimeError(f"manus-speech-to-text 失敗：{result.stderr.strip()}")
+    output = result.stdout.strip()
+    if not output:
+        raise RuntimeError("manus-speech-to-text 回傳空白逐字稿")
+    return output
 
 
 def analyze_with_gpt4o(transcript: str, platform: str, url: str) -> dict:

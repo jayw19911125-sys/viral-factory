@@ -51,7 +51,7 @@ client = OpenAI()
 # ─── 工具函數 ─────────────────────────────────────────────
 
 def run_mcp(tool: str, input_dict: dict, timeout: int = 30) -> dict:
-    """呼叫 Notion MCP 工具"""
+    """呼叫 Notion MCP 工具，統一解析輸出"""
     try:
         result = subprocess.run(
             ["manus-mcp-cli", "tool", "call", tool,
@@ -59,9 +59,18 @@ def run_mcp(tool: str, input_dict: dict, timeout: int = 30) -> dict:
              "--input", json.dumps(input_dict)],
             capture_output=True, text=True, timeout=timeout
         )
-        if result.returncode == 0:
-            return json.loads(result.stdout)
-        return {}
+        if result.returncode != 0:
+            print(f"  MCP 呼叫失敗（{tool}）：{result.stderr[:100]}")
+            return {}
+        raw = result.stdout.strip()
+        # 移除 ANSI 控制碼
+        raw = re.sub(r'\x1b\[[0-9;]*m', '', raw)
+        # 取 Tool execution result: 之後的部分
+        if "Tool execution result:" in raw:
+            raw = raw.split("Tool execution result:")[-1].strip()
+        if not raw:
+            return {}
+        return json.loads(raw)
     except Exception as e:
         print(f"  MCP 呼叫失敗（{tool}）：{e}")
         return {}
@@ -93,8 +102,8 @@ def get_week_range() -> tuple[str, str]:
 def count_db_entries_this_week(db_id: str, start: str, end: str) -> int:
     """查詢某個 Notion 資料庫在指定日期範圍內的新增筆數"""
     try:
-        result = run_mcp("notion-query-database", {
-            "database_id": db_id,
+        result = run_mcp("notion-query-data-sources", {
+            "data_source_id": db_id,
             "filter": {
                 "property": "建立時間",
                 "date": {
@@ -104,7 +113,7 @@ def count_db_entries_this_week(db_id: str, start: str, end: str) -> int:
             },
             "page_size": 100
         }, timeout=25)
-        results = result.get("results", [])
+        results = result.get("results", result.get("pages", []))
         return len(results)
     except Exception:
         return 0
@@ -113,8 +122,8 @@ def count_db_entries_this_week(db_id: str, start: str, end: str) -> int:
 def get_top_scores_this_week(start: str, end: str) -> dict:
     """統計本週各評分的數量"""
     try:
-        result = run_mcp("notion-query-database", {
-            "database_id": NOTION_DB["02_拆解庫"],
+        result = run_mcp("notion-query-data-sources", {
+            "data_source_id": NOTION_DB["02_拆解庫"],
             "filter": {
                 "property": "建立時間",
                 "date": {
@@ -124,7 +133,7 @@ def get_top_scores_this_week(start: str, end: str) -> dict:
             },
             "page_size": 100
         }, timeout=25)
-        entries = result.get("results", [])
+        entries = result.get("results", result.get("pages", []))
         score_dist = {"5分": 0, "4分": 0, "3分": 0, "2分": 0, "1分": 0}
         for entry in entries:
             props = entry.get("properties", {})
