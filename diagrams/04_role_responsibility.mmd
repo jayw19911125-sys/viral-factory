@@ -9,13 +9,19 @@ graph TB
         S7["週五自動生成週報"]
     end
 
+    subgraph XIAOXIN["📝 小鑫（企劃）的工作"]
+        XX1["每日收到 Slack 通知後\n查看今日拆解結果"]
+        XX2["進入 02 爆款拆解庫\n閱讀高分影片的拆解報告"]
+        XX3["進入 03 開頭鉤子庫\n找本週客戶影片的開頭靈感"]
+        XX4["進入 05 腳本結構庫\n參考敘事框架規劃腳本"]
+        XX5["進入 35 高分腳本庫\n直接複製驗證過的腳本結構"]
+        XX6["產出分鏡腳本\n交給阿韋執行"]
+    end
+
     subgraph AWEI["✂️ 阿韋（剪輯師）的工作"]
-        AW1["每日收到 Slack 通知後\n查看今日拆解結果"]
-        AW2["進入 02 爆款拆解庫\n閱讀高分影片的拆解報告"]
-        AW3["進入 03 開頭鉤子庫\n找本週客戶影片的開頭靈感"]
-        AW4["進入 05 腳本結構庫\n參考敘事框架規劃剪輯節奏"]
-        AW5["進入 06 視覺錘庫\n參考視覺設計亮點"]
-        AW6["進入 35 高分腳本庫\n直接複製驗證過的腳本結構"]
+        AW1["收到小鑫的分鏡腳本\n開始剪輯"]
+        AW5["進入 06 視覺錘庫\n參考視覺設計亮點做字卡特效"]
+        AW7["多平台輸出交付"]
     end
 
     subgraph HANGYUN["👑 涵勻（CEO）的工作"]
@@ -32,13 +38,15 @@ graph TB
         ZQ4["根據庫房數據調整\n監控帳號清單與產業優先級"]
     end
 
-    S5 --> AW1
+    S5 --> XX1
+    XX6 --> AW1
     S5 --> ZQ1
     S7 --> HY1
     S6 --> HY2
     S6 --> ZQ1
 
     style AUTO fill:#FFF3E0,stroke:#FF9800,stroke-width:2px
+    style XIAOXIN fill:#FFF8E1,stroke:#FBC02D,stroke-width:2px
     style AWEI fill:#E8F5E9,stroke:#4CAF50,stroke-width:2px
     style HANGYUN fill:#E3F2FD,stroke:#2196F3,stroke-width:2px
     style ZIQUAN fill:#F3E5F5,stroke:#9C27B0,stroke-width:2px
