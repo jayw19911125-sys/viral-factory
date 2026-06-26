@@ -216,8 +216,9 @@ def analyze_with_gpt4o(transcript: str, platform: str, url: str) -> dict:
 
 def check_duplicate_via_mcp(url: str) -> bool:
     """透過 Notion MCP 查詢是否已有此連結"""
+    import re as _re
     cmd = [
-        "manus-mcp-cli", "tool", "call", "notion-query-database",
+        "manus-mcp-cli", "tool", "call", "notion-query-data-sources",
         "--server", "notion",
         "--input", json.dumps({
             "data_source_id": NOTION_DB_ID,
@@ -231,8 +232,12 @@ def check_duplicate_via_mcp(url: str) -> bool:
     if result.returncode != 0:
         return False
     try:
-        data = json.loads(result.stdout.split("Tool execution result:\n")[-1])
-        return len(data.get("results", [])) > 0
+        raw = result.stdout.strip()
+        raw = _re.sub(r'\x1b\[[0-9;]*m', '', raw)
+        if "Tool execution result:" in raw:
+            raw = raw.split("Tool execution result:")[-1].strip()
+        data = json.loads(raw)
+        return len(data.get("results", data.get("pages", []))) > 0
     except Exception:
         return False
 
