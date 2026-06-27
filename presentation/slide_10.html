@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;800&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Space Grotesk', sans-serif; }
+        .slide-container { 
+            width: 1280px; 
+            min-height: 720px; 
+            background-color: #F8F9FA; 
+            position: relative;
+            padding-top: 50px;
+            overflow: hidden;
+        }
+        
+        .slide-container::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-image: 
+                linear-gradient(to right, rgba(33, 37, 41, 0.05) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(33, 37, 41, 0.05) 1px, transparent 1px);
+            background-size: 40px 40px;
+            z-index: 0;
+        }
+
+        .header {
+            position: relative;
+            z-index: 1;
+            margin: 0 60px 30px;
+            border-bottom: 4px solid #212529;
+        }
+
+        .page-title {
+            color: #212529;
+            font-size: 32px;
+            font-weight: 800;
+            margin-bottom: 16px;
+        }
+
+        .page-title span { color: #F72585; }
+
+        .content-grid {
+            position: relative;
+            z-index: 1;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 24px;
+            margin: 0 60px;
+        }
+
+        .report-card {
+            background: white;
+            border: 1px solid #212529;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .report-card.friday {
+            box-shadow: 6px 6px 0px #4361EE;
+        }
+
+        .report-card.monday {
+            box-shadow: 6px 6px 0px #F72585;
+        }
+
+        .card-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid #212529;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .friday .card-header { background: #4361EE; color: white; }
+        .monday .card-header { background: #F72585; color: white; }
+
+        .card-icon {
+            font-size: 28px;
+        }
+
+        .card-title {
+            font-size: 24px;
+            font-weight: 800;
+        }
+
+        .card-body {
+            padding: 24px;
+            flex: 1;
+        }
+
+        .data-list {
+            list-style: none;
+        }
+
+        .data-list li {
+            font-size: 18px;
+            color: #495057;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            line-height: 1.4;
+        }
+
+        .data-list li i {
+            margin-top: 4px;
+            font-size: 14px;
+            color: #212529;
+        }
+
+        .highlight-text {
+            font-weight: 800;
+            color: #212529;
+        }
+
+        .action-card {
+            grid-column: 1 / 3;
+            background: #212529;
+            color: white;
+            border: 1px solid #212529;
+            padding: 30px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            margin-top: 10px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .action-card::before {
+            content: '';
+            position: absolute;
+            left: 0; top: 0; bottom: 0;
+            width: 8px;
+            background: #E01E5A; /* Slack Red */
+        }
+
+        .action-content {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .action-label {
+            font-size: 16px;
+            color: #F8F9FA;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            opacity: 0.8;
+        }
+
+        .action-title {
+            font-size: 28px;
+            font-weight: 800;
+        }
+
+        .action-title i {
+            color: #E01E5A;
+            margin: 0 8px;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="slide-container">
+        <div class="header">
+            <h2 class="page-title"><span>09 /</span> 涵勻，系統每週自動產出報告，讓你掌握內容方向</h2>
+        </div>
+
+        <div class="content-grid">
+            <!-- Friday Report -->
+            <div class="report-card friday">
+                <div class="card-header">
+                    <i class="fas fa-chart-bar card-icon"></i>
+                    <div class="card-title">每週五 09:00｜系統週報</div>
+                </div>
+                <div class="card-body">
+                    <ul class="data-list">
+                        <li><i class="fas fa-chevron-right"></i> <div><span class="highlight-text">本週拆解總量：</span>TikTok 與 Meta 廣告各拆解了幾支</div></li>
+                        <li><i class="fas fa-chevron-right"></i> <div><span class="highlight-text">評分分佈狀況：</span>5 分、4 分等各級別影片的數量比例</div></li>
+                        <li><i class="fas fa-chevron-right"></i> <div><span class="highlight-text">高分入庫分析：</span>IP 型與導購型影片各有多少支進入 35 庫</div></li>
+                        <li><i class="fas fa-chevron-right"></i> <div><span class="highlight-text">本週最高分影片摘要：</span>直接呈現最具參考價值的爆款重點</div></li>
+                        <li><i class="fas fa-chevron-right"></i> <div><span class="highlight-text">庫房健康度：</span>各庫房目前累積的素材總數</div></li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Monday Update -->
+            <div class="report-card monday">
+                <div class="card-header">
+                    <i class="fas fa-book card-icon"></i>
+                    <div class="card-title">每週一 09:00｜手冊週更</div>
+                </div>
+                <div class="card-body">
+                    <ul class="data-list">
+                        <li><i class="fas fa-chevron-right"></i> <div><span class="highlight-text">自動更新操作手冊：</span>系統自動將最新的統計數字與規則寫入 Notion 手冊</div></li>
+                        <li><i class="fas fa-chevron-right"></i> <div><span class="highlight-text">自動生成 PDF：</span>將更新後的手冊轉換為便於閱讀的 PDF 格式</div></li>
+                        <li><i class="fas fa-chevron-right"></i> <div><span class="highlight-text">主動發送通知：</span>將最新版 PDF 連結發送到 Slack 全員頻道</div></li>
+                    </ul>
+                </div>
+            </div>
+
+            <!-- Action Required -->
+            <div class="action-card">
+                <div class="action-content">
+                    <div class="action-label">你需要做的事</div>
+                    <div class="action-title">什麼都不用做，打開 <i class="fab fa-slack"></i> Slack 看通知即可</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -32,20 +32,21 @@ SLACK_AWEI_ID    = "U0B4FG0ER89"   # 阿韋 User ID（用於 @mention）
 SLACK_TEAM_CH    = "C0AQG307XJT"   # #all-團隊主頻道
 SLACK_AUTO_CH    = "C0AUH4QKF5M"   # #自動化訊息來源（影音類別）
 
-# ─── GPT-4o 拆解 Prompt（v3.0 頂尖方法論版）────────────────
-# 基於視覺錘×語言釘×鉤子設計系統×Meta廣告投放邏輯建立
+# ─── GPT-4o 拆解 Prompt（v4.0 全類型分角色版）────────────────
+# 新增：影片類型分類（6種）、企劃師版輸出、剪輯師版輸出、爆款原因三層分析
 ANALYSIS_PROMPT = """
 你是「好創整合行銷」的頂尖短影音爆款拆解師，精通以下知識體系：
 - 視覺錘（Visual Hammer）× 語言釘（Verbal Nail）品牌定位理論
-- 五大鉤子類型：大膽宣言型、問題型、前後對比型、好奇缺口型、痛點激化型
+- 六大鉤子類型：大膽宣言型、問題型、前後對比型、好奇缺口型、痛點激化型、挑戰型
 - Meta Andromeda 演算法（2026）：素材 > 受眾，3秒留存率決定推播
 - 各產業最佳廣告素材結構（餐飲/美容/電商/服務業）
 - 人設定位系統：專家型/素人見證型/創業者型/在地達人型/生活達人型/挑戰者型
+- 六大影片類型：導購型/個人IP型/品牌IP型/UGC型/時事議題型/病毒式傳播型
 
-你的任務：對這支影片進行「頂尖拆解」，目標是讓閱讀者能直接複製這套方法論。
+你的任務：對這支影片進行「頂尖拆解」，同時產出「企劃師版」與「剪輯師版」兩份可直接使用的應用建議。
 每個欄位都要具體、有深度，給出「可直接套用的洞察」，不要空泛描述。
 
-請以 JSON 格式回傳，包含以下 12 個欄位：
+請以 JSON 格式回傳，包含以下欄位：
 
 {{
   "影片標題或主題": "用一句話描述核心主題（20字以內）",
@@ -110,7 +111,29 @@ ANALYSIS_PROMPT = """
   "無效因素識別": [
     "列出這支影片的弱點或無效元素，例如：開頭太慢/CTA太弱/靜音無法理解等"
   ],
-  
+
+  "影片類型": "必須從以下選項選一個：導購型、個人IP型、品牌IP型、UGC型、時事議題型、病毒式傳播型",
+
+  "為什麼會爆款": "用3句話以內說明：這支影片為什麼會成為爆款？核心原因是什麼？",
+
+  "為什麼是好影片": "用3句話以內說明：從影片製作品質、內容價值、觀眾體驗三個角度，說明這是一部好影片的原因",
+
+  "能達到什麼效果": "這支影片能達到什麼商業或傳播效果？例如：品牌認知提升/直接帶貨/粉絲增長/話題擴散等",
+
+  "企劃師應用建議": {{
+    "本週可用選題": "根據這支影片，企劃師本週可以發展的1個具體選題方向（含標題公式）",
+    "可套用的開場白公式": "把這支影片的開場白抽象成可填空的公式，例如：[痛點]+[意外轉折]+[懸念]",
+    "適合哪類客戶": "好創目前服務的哪類客戶最適合借鑑這支影片？為什麼？",
+    "改編建議": "如果要為台灣本土品牌改編這支影片，最需要調整的3個地方是什麼？"
+  }},
+
+  "剪輯師應用建議": {{
+    "前3秒剪輯指令": "具體說明前3秒要怎麼剪：鏡頭切換方式、字幕出現時機、音效使用",
+    "節奏時間軸": "用時間點描述整支影片的剪輯節奏，例如：0-3秒快切3個鏡頭→3-15秒平穩敘事→15-25秒衝突高潮→25秒後CTA",
+    "視覺錘強調方式": "剪輯時如何強調這支影片的視覺錘？用什麼特效或字幕設計？",
+    "音效與音樂建議": "這支影片的音效節奏如何配合剪輯？哪些時間點需要特別的音效強調？"
+  }},
+
   "熱門音樂": "音樂風格、情緒功能、為什麼選這首（若無法判斷填：需人工補充）",
   
   "類別標籤": ["從以下選項中選擇最符合的（可多選，必須從此清單選擇）：美妝保養、餐飲食品、服飾配件、保健醫療、數位課程、服務業、家居家具、婚禮攝影、3C電子、通用"],
@@ -451,21 +474,58 @@ def process_single_video(url: str, whisper_available: bool = True) -> dict:
             notion_url = write_to_notion_via_mcp(url, platform, transcript, analysis)
             print(f"  寫入完成：{notion_url}")
 
-            # Step 5: Slack 通知
-            print(f"  [5/5] Slack 通知（#自動化訊息來源 @阿韋）...")
+            # Step 5: Slack 分角色通知
+            print(f"  [5/5] Slack 分角色通知（小鑫企劃版 + 阿韋剪輯版）...")
             today = datetime.now().strftime("%Y-%m-%d")
-            msg = (
-                f"🔥 *爆款入庫* | {today}\n"
-                f"<@{SLACK_AWEI_ID}> 新素材入庫，請查收\n\n"
-                f"*平台：* {platform}\n"
-                f"*標題：* {analysis.get('影片標題或主題', '未命名')}\n"
-                f"*鉤子類型：* {analysis.get('鉤子類型與設計', {}).get('鉤子類型', '') if isinstance(analysis.get('鉤子類型與設計'), dict) else ''}\n"
-                f"*可套用公式：* {analysis.get('鉤子類型與設計', {}).get('可套用公式', '') if isinstance(analysis.get('鉤子類型與設計'), dict) else ''}\n"
-                f"*廣告潛力：* {analysis.get('廣告投放潛力評估', {}).get('適合投廣告嗎', '') if isinstance(analysis.get('廣告投放潛力評估'), dict) else ''}\n"
-                f"*Notion：* {notion_url}"
+            title = analysis.get('影片標題或主題', '未命名')
+            video_type = analysis.get('影片類型', '')
+            score_label = analysis.get('score_label', '')
+            why_viral = analysis.get('為什麼會爆款', '')
+            effect = analysis.get('能達到什麼效果', '')
+
+            # 企劃師版通知（小鑫）
+            planner_tips = analysis.get('企劃師應用建議', {})
+            topic = planner_tips.get('本週可用選題', '') if isinstance(planner_tips, dict) else ''
+            formula = planner_tips.get('可套用的開場白公式', '') if isinstance(planner_tips, dict) else ''
+            client_fit = planner_tips.get('適合哪類客戶', '') if isinstance(planner_tips, dict) else ''
+
+            msg_planner = (
+                f"💡 *今日爆款入庫（企劃版）* | {today}\n"
+                f"影片類型：{video_type} | 平台：{platform}\n"
+                f"*標題：* {title}\n\n"
+                f"🔥 *為什麼會爆款？*\n{why_viral}\n\n"
+                f"🎯 *能達到什麼效果？*\n{effect}\n\n"
+                f"✅ *本週可用選題：*\n{topic}\n\n"
+                f"📝 *可套用開場白公式：*\n{formula}\n\n"
+                f"🎯 *適合哪類客戶：*\n{client_fit}\n\n"
+                f"📚 完整拆解分析 → {notion_url}"
             )
-            send_slack_dm(msg, channel=SLACK_AUTO_CH)  # 發到 #自動化訊息來源
-            print(f"  通知已發送")
+
+            # 剪輯師版通知（阿韋）
+            editor_tips = analysis.get('剪輯師應用建議', {})
+            cut_cmd = editor_tips.get('前3秒剪輯指令', '') if isinstance(editor_tips, dict) else ''
+            timeline = editor_tips.get('節奏時間軸', '') if isinstance(editor_tips, dict) else ''
+            visual_tip = editor_tips.get('視覺錘強調方式', '') if isinstance(editor_tips, dict) else ''
+            audio_tip = editor_tips.get('音效與音樂建議', '') if isinstance(editor_tips, dict) else ''
+            why_good = analysis.get('為什麼是好影片', '')
+
+            msg_editor = (
+                f"🎬 *今日爆款入庫（剪輯版）* | {today}\n"
+                f"<@{SLACK_AWEI_ID}> 新素材入庫，請查收\n"
+                f"影片類型：{video_type} | 平台：{platform}\n"
+                f"*標題：* {title}\n\n"
+                f"🌟 *為什麼是好影片？*\n{why_good}\n\n"
+                f"⏱️ *前3秒剪輯指令：*\n{cut_cmd}\n\n"
+                f"📊 *節奏時間軸：*\n{timeline}\n\n"
+                f"🔨 *視覺錘強調方式：*\n{visual_tip}\n\n"
+                f"🎵 *音效與音樂建議：*\n{audio_tip}\n\n"
+                f"📚 完整拆解分析 → {notion_url}"
+            )
+
+            # 發送兩則分角色通知
+            send_slack_dm(msg_planner, channel=SLACK_AUTO_CH)   # 小鑫企劃版 → #自動化訊息來源
+            send_slack_dm(msg_editor, channel=SLACK_AUTO_CH)    # 阿韋剪輯版 → #自動化訊息來源
+            print(f"  通知已發送（企劃版 + 剪輯版）")
 
             print(f"\n  ✅ 完成！")
             return {
@@ -474,6 +534,8 @@ def process_single_video(url: str, whisper_available: bool = True) -> dict:
                 "title": analysis.get("影片標題或主題", ""),
                 "platform": platform,
                 "url": url,
+                "video_type": analysis.get("影片類型", ""),
+                "score": analysis.get("score", 0),
                 "analysis": analysis
             }
 
@@ -499,15 +561,47 @@ def process_batch(urls: list, whisper_available: bool = True) -> list:
     fail_count = len(results) - len(success_items)
     today = datetime.now().strftime("%Y-%m-%d")
 
-    lines = [f"📊 *爆款入庫日報* | {today}\n"]
-    lines.append(f"今日入庫：*{len(success_items)} 支* | 失敗/跳過：{fail_count} 支\n")
-    for i, r in enumerate(success_items, 1):
-        lines.append(f"{i}. [{r.get('platform','')}] {r.get('title','')}")
-        lines.append(f"   → {r.get('notion_url','')}")
+    # 統計影片類型分佈與評分分佈
+    type_count = {}
+    score_dist = {1: 0, 2: 0, 3: 0, 4: 0, 5: 0}
+    for r in success_items:
+        vtype = r.get('video_type', r.get('analysis', {}).get('影片類型', '未分類'))
+        type_count[vtype] = type_count.get(vtype, 0) + 1
+        score = r.get('score', 0)
+        if isinstance(score, int) and score in score_dist:
+            score_dist[score] += 1
 
-    # 日報加上 @阿韋 標註，發到 #自動化訊息來源
-    lines.insert(1, f"<@{SLACK_AWEI_ID}> 今日入庫日報\n")
+    type_summary = ' | '.join([f"{k}:{v}支" for k, v in type_count.items()]) or '無分類資料'
+    score_summary = ' '.join([f"{s}分:{n}支" for s, n in score_dist.items() if n > 0]) or '無評分資料'
+
+    # 主頻道日報（小鑫 + 阿韋）
+    lines = [f"📊 *今日爆款入庫日報* | {today}\n"]
+    lines.append(f"<@{SLACK_AWEI_ID}> 今日入庫完成\n")
+    lines.append(f"入庫：*{len(success_items)} 支* | 失敗/跳過：{fail_count} 支")
+    lines.append(f"影片類型：{type_summary}")
+    lines.append(f"評分分佈：{score_summary}\n")
+    for i, r in enumerate(success_items, 1):
+        vtype = r.get('video_type', '')
+        score = r.get('score', '-')
+        lines.append(f"{i}. [{r.get('platform','')}][{vtype}] {r.get('title','')} ★{score}")
+        lines.append(f"   → {r.get('notion_url','')}")
     send_slack_dm("\n".join(lines), channel=SLACK_AUTO_CH)
+
+    # 子權健康版 DM
+    SLACK_DENNIS_ID = os.environ.get('SLACK_DENNIS_ID', 'U07MHPJKQ8V')
+    fail_rate = fail_count / (len(results) or 1) * 100
+    health_lines = [
+        f"🛡️ *系統健康摘要* | {today}",
+        f"執行結果：成功 {len(success_items)} 支 | 失敗 {fail_count} 支 | 失敗率 {fail_rate:.0f}%",
+        f"影片類型分佈：{type_summary}",
+        f"評分分佈：{score_summary}",
+    ]
+    if fail_count > 0:
+        fail_urls = [r.get('url', '') for r in results if not r.get('success') and r.get('error') != 'duplicate']
+        if fail_urls:
+            health_lines.append(f"失敗影片：{', '.join(fail_urls[:2])}")
+    health_lines.append(f"庫房狀態：請至 Notion 02爆款拆解庫查看")
+    send_slack_dm("\n".join(health_lines), channel=SLACK_DENNIS_ID)
 
     print(f"\n{'='*55}")
     print(f"✅ 完成：{len(success_items)} 支 | ❌ 失敗：{fail_count} 支")

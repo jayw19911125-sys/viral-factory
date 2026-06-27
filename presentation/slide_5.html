@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;800&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Space Grotesk', sans-serif; }
+        .slide-container { 
+            width: 1280px; 
+            min-height: 720px; 
+            background-color: #F8F9FA; 
+            position: relative;
+            padding-top: 50px;
+            overflow: hidden;
+        }
+        
+        .slide-container::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-image: 
+                linear-gradient(to right, rgba(33, 37, 41, 0.05) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(33, 37, 41, 0.05) 1px, transparent 1px);
+            background-size: 40px 40px;
+            z-index: 0;
+        }
+
+        .header {
+            position: relative;
+            z-index: 1;
+            margin: 0 60px 24px;
+            border-bottom: 4px solid #212529;
+        }
+
+        .page-title {
+            color: #212529;
+            font-size: 32px;
+            font-weight: 800;
+            margin-bottom: 16px;
+        }
+
+        .page-title span { color: #F72585; }
+
+        .content-grid {
+            position: relative;
+            z-index: 1;
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 24px;
+            margin: 0 60px;
+        }
+
+        .table-header {
+            display: grid;
+            grid-template-columns: 120px 1fr 140px;
+            background: #212529;
+            color: white;
+            font-weight: 800;
+            font-size: 14px;
+            padding: 10px 16px;
+            border: 1px solid #212529;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .data-row {
+            display: grid;
+            grid-template-columns: 120px 1fr 140px;
+            background: white;
+            border: 1px solid #212529;
+            border-top: none;
+            align-items: center;
+        }
+
+        .data-row:nth-child(even) {
+            background: rgba(67, 97, 238, 0.03);
+        }
+
+        .cell-name {
+            font-weight: 800;
+            color: #212529;
+            padding: 12px 16px;
+            border-right: 1px solid #212529;
+            font-size: 16px;
+        }
+
+        .cell-desc {
+            color: #495057;
+            padding: 12px 16px;
+            border-right: 1px solid #212529;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+
+        .cell-value {
+            color: #F72585;
+            font-weight: 800;
+            padding: 12px 16px;
+            font-size: 14px;
+            background: rgba(247, 37, 133, 0.05);
+        }
+
+        .column-group {
+            display: flex;
+            flex-direction: column;
+        }
+    </style>
+</head>
+<body>
+    <div class="slide-container">
+        <div class="header">
+            <h2 class="page-title"><span>04 /</span> 每支影片被拆成 12 個維度，讓創作有依據</h2>
+        </div>
+
+        <div class="content-grid">
+            <!-- Left Column -->
+            <div class="column-group">
+                <div class="table-header">
+                    <div>維度欄位</div>
+                    <div>內容說明</div>
+                    <div>對企劃的價值</div>
+                </div>
+                <div class="data-row">
+                    <div class="cell-name">開頭鉤子</div>
+                    <div class="cell-desc">前 3 秒說了什麼，如何抓住注意力</div>
+                    <div class="cell-value"><i class="fas fa-copy"></i> 直接複製公式</div>
+                </div>
+                <div class="data-row">
+                    <div class="cell-name">鉤子大類</div>
+                    <div class="cell-desc">疑問/否定/衝突/數字/警告/揭秘</div>
+                    <div class="cell-value"><i class="fas fa-tag"></i> 知道用哪種類型</div>
+                </div>
+                <div class="data-row">
+                    <div class="cell-name">結尾呼籲</div>
+                    <div class="cell-desc">影片最後的行動指令 (CTA)</div>
+                    <div class="cell-value"><i class="fas fa-bullhorn"></i> 複製 CTA 公式</div>
+                </div>
+                <div class="data-row">
+                    <div class="cell-name">腳本結構</div>
+                    <div class="cell-desc">整支影片的敘事框架與節奏</div>
+                    <div class="cell-value"><i class="fas fa-layer-group"></i> 套用相同結構</div>
+                </div>
+                <div class="data-row">
+                    <div class="cell-name">視覺錘</div>
+                    <div class="cell-desc">畫面中讓人一眼記住的視覺元素</div>
+                    <div class="cell-value"><i class="fas fa-video"></i> 拍攝視覺參考</div>
+                </div>
+                <div class="data-row" style="border-bottom: 1px solid #212529;">
+                    <div class="cell-name">語言釘</div>
+                    <div class="cell-desc">洗腦、好記、有共鳴的金句文案</div>
+                    <div class="cell-value"><i class="fas fa-pen-nib"></i> 文案寫作參考</div>
+                </div>
+            </div>
+
+            <!-- Right Column -->
+            <div class="column-group">
+                <div class="table-header" style="background: #4361EE; border-color: #4361EE;">
+                    <div>維度欄位</div>
+                    <div>內容說明</div>
+                    <div>對企劃的價值</div>
+                </div>
+                <div class="data-row">
+                    <div class="cell-name">神經科學機制</div>
+                    <div class="cell-desc">觸發了哪種大腦反應 (如多巴胺、皮質醇)</div>
+                    <div class="cell-value"><i class="fas fa-brain"></i> 理解底層邏輯</div>
+                </div>
+                <div class="data-row">
+                    <div class="cell-name">人設定位</div>
+                    <div class="cell-desc">創作者在影片中扮演什麼角色身份</div>
+                    <div class="cell-value"><i class="fas fa-user-tie"></i> 確認自身人設</div>
+                </div>
+                <div class="data-row">
+                    <div class="cell-name">情緒弧線</div>
+                    <div class="cell-desc">觀眾情緒如何被帶動 (起伏變化)</div>
+                    <div class="cell-value"><i class="fas fa-chart-line"></i> 設計情緒節奏</div>
+                </div>
+                <div class="data-row">
+                    <div class="cell-name">產品植入方式</div>
+                    <div class="cell-desc">如何自然地帶出產品而不突兀</div>
+                    <div class="cell-value"><i class="fas fa-shopping-bag"></i> 導購影片參考</div>
+                </div>
+                <div class="data-row">
+                    <div class="cell-name">平台適配性</div>
+                    <div class="cell-desc">此風格最適合發布在哪個社群平台</div>
+                    <div class="cell-value"><i class="fas fa-share-alt"></i> 選擇發布平台</div>
+                </div>
+                <div class="data-row" style="border-bottom: 1px solid #212529;">
+                    <div class="cell-name">可複製性</div>
+                    <div class="cell-desc">好創現有資源與團隊能不能拍得出來</div>
+                    <div class="cell-value"><i class="fas fa-check-circle"></i> 判斷執行可行性</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

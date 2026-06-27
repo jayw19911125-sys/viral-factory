@@ -1,0 +1,212 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;800&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Space Grotesk', sans-serif; }
+        .slide-container { 
+            width: 1280px; 
+            min-height: 720px; 
+            background-color: #F8F9FA; 
+            position: relative;
+            padding: 60px;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        .slide-container::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-image: 
+                linear-gradient(to right, rgba(33, 37, 41, 0.05) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(33, 37, 41, 0.05) 1px, transparent 1px);
+            background-size: 40px 40px;
+            z-index: 0;
+        }
+
+        .header {
+            position: relative;
+            z-index: 1;
+            text-align: center;
+            margin-bottom: 50px;
+        }
+
+        .page-title {
+            color: #212529;
+            font-size: 40px;
+            font-weight: 800;
+            display: inline-block;
+            border-bottom: 4px solid #F72585;
+            padding-bottom: 10px;
+        }
+
+        .content-grid {
+            position: relative;
+            z-index: 1;
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 30px;
+            margin-bottom: 40px;
+        }
+
+        .value-card {
+            background: white;
+            border: 1px solid #212529;
+            padding: 40px 30px;
+            text-align: center;
+            position: relative;
+            box-shadow: 6px 6px 0px #212529;
+            transition: transform 0.2s;
+        }
+
+        .value-card:nth-child(1) { box-shadow: 6px 6px 0px #4361EE; border-color: #4361EE; }
+        .value-card:nth-child(2) { box-shadow: 6px 6px 0px #F72585; border-color: #F72585; }
+
+        .value-icon {
+            font-size: 48px;
+            margin-bottom: 20px;
+        }
+
+        .value-card:nth-child(1) .value-icon { color: #4361EE; }
+        .value-card:nth-child(2) .value-icon { color: #F72585; }
+        .value-card:nth-child(3) .value-icon { color: #212529; }
+
+        .value-title {
+            font-size: 28px;
+            font-weight: 800;
+            color: #212529;
+            margin-bottom: 16px;
+            letter-spacing: 2px;
+        }
+
+        .value-desc {
+            font-size: 18px;
+            color: #495057;
+            line-height: 1.5;
+        }
+
+        .footer-section {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            gap: 30px;
+            margin-top: auto;
+        }
+
+        .next-steps {
+            flex: 1;
+            background: #212529;
+            color: white;
+            padding: 30px;
+            border: 1px solid #212529;
+        }
+
+        .next-steps h3 {
+            color: #F72585;
+            font-size: 20px;
+            margin-bottom: 16px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .next-steps ul {
+            list-style: none;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .next-steps li {
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .next-steps li i { color: #4361EE; }
+
+        .status-badge {
+            background: white;
+            border: 2px solid #212529;
+            padding: 0 30px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-size: 24px;
+            font-weight: 800;
+            color: #212529;
+            margin-bottom: 8px;
+        }
+
+        .status-dot {
+            width: 16px;
+            height: 16px;
+            background-color: #20C997;
+            border-radius: 50%;
+        }
+
+        .status-text {
+            font-size: 14px;
+            color: #495057;
+            font-weight: 800;
+        }
+    </style>
+</head>
+<body>
+    <div class="slide-container">
+        <div class="header">
+            <h2 class="page-title">終極目標：讓好創的每一支影片都有根據</h2>
+        </div>
+
+        <div class="content-grid">
+            <div class="value-card">
+                <i class="fas fa-arrow-down value-icon"></i>
+                <h3 class="value-title">降本</h3>
+                <p class="value-desc">每天節省 1-2 小時的人工競品分析時間，讓企劃專注於創作</p>
+            </div>
+            
+            <div class="value-card">
+                <i class="fas fa-rocket value-icon"></i>
+                <h3 class="value-title">增效</h3>
+                <p class="value-desc">不再從零開始發想，直接從分類好的模組庫中提取驗證過的素材</p>
+            </div>
+
+            <div class="value-card">
+                <i class="fas fa-database value-icon"></i>
+                <h3 class="value-title">沉澱</h3>
+                <p class="value-desc">每一支爆款的底層邏輯都被記錄下來，成為好創帶不走的知識資產</p>
+            </div>
+        </div>
+
+        <div class="footer-section">
+            <div class="next-steps">
+                <h3>Next Steps</h3>
+                <ul>
+                    <li><i class="fas fa-check"></i> IG Reels 監控即將上線</li>
+                    <li><i class="fas fa-check"></i> 素材庫持續累積，越用越準</li>
+                    <li><i class="fas fa-check"></i> 手冊自動更新，永遠是最新版</li>
+                </ul>
+            </div>
+            
+            <div class="status-badge">
+                <div class="status-indicator">
+                    <div class="status-dot"></div> 系統運行中
+                </div>
+                <div class="status-text">每週一至週五 09:00 自動執行</div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

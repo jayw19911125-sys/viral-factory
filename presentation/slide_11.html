@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;800&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Space Grotesk', sans-serif; }
+        .slide-container { 
+            width: 1280px; 
+            min-height: 720px; 
+            background-color: #F8F9FA; 
+            position: relative;
+            padding-top: 50px;
+            overflow: hidden;
+        }
+        
+        .slide-container::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-image: 
+                linear-gradient(to right, rgba(33, 37, 41, 0.05) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(33, 37, 41, 0.05) 1px, transparent 1px);
+            background-size: 40px 40px;
+            z-index: 0;
+        }
+
+        .header {
+            position: relative;
+            z-index: 1;
+            margin: 0 60px 30px;
+            border-bottom: 4px solid #212529;
+        }
+
+        .page-title {
+            color: #212529;
+            font-size: 32px;
+            font-weight: 800;
+            margin-bottom: 16px;
+        }
+
+        .page-title span { color: #F72585; }
+
+        .content-grid {
+            position: relative;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 30px;
+            margin: 0 60px;
+        }
+
+        .schedule-table {
+            border: 1px solid #212529;
+            background: white;
+        }
+
+        .table-header {
+            display: grid;
+            grid-template-columns: 250px 1fr 350px;
+            background: #212529;
+            color: white;
+            font-weight: 800;
+            font-size: 18px;
+            padding: 16px 24px;
+        }
+
+        .table-row {
+            display: grid;
+            grid-template-columns: 250px 1fr 350px;
+            border-top: 1px solid #212529;
+            align-items: center;
+        }
+
+        .table-row:nth-child(even) {
+            background: rgba(67, 97, 238, 0.03);
+        }
+
+        .cell-time {
+            padding: 20px 24px;
+            font-weight: 800;
+            color: #4361EE;
+            font-size: 18px;
+            border-right: 1px solid #212529;
+        }
+
+        .cell-task {
+            padding: 20px 24px;
+            font-size: 18px;
+            color: #212529;
+            font-weight: 800;
+            border-right: 1px solid #212529;
+        }
+
+        .cell-notify {
+            padding: 20px 24px;
+            font-size: 16px;
+            color: #495057;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .cell-notify i { color: #E01E5A; }
+
+        .scope-section {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .scope-title {
+            font-size: 20px;
+            font-weight: 800;
+            color: #212529;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .scope-cards {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+
+        .scope-card {
+            background: white;
+            border: 1px solid #212529;
+            padding: 24px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            box-shadow: 4px 4px 0px #212529;
+        }
+
+        .scope-card.wip {
+            background: #F8F9FA;
+            border: 1px dashed #212529;
+            box-shadow: none;
+            opacity: 0.7;
+        }
+
+        .scope-icon {
+            font-size: 32px;
+            color: #212529;
+        }
+
+        .scope-card.wip .scope-icon { color: #F7B731; }
+
+        .scope-info h4 {
+            font-size: 18px;
+            font-weight: 800;
+            margin-bottom: 4px;
+        }
+
+        .scope-info p {
+            font-size: 16px;
+            color: #495057;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="slide-container">
+        <div class="header">
+            <h2 class="page-title"><span>10 /</span> 系統的完整時間表與監控範圍</h2>
+        </div>
+
+        <div class="content-grid">
+            <!-- Schedule Table -->
+            <div class="schedule-table">
+                <div class="table-header">
+                    <div>執行時間</div>
+                    <div>自動執行的任務</div>
+                    <div>通知發送至</div>
+                </div>
+                <div class="table-row">
+                    <div class="cell-time">每日 09:00<br><span style="font-size:14px; color:#495057; font-weight:400;">(週一至週五)</span></div>
+                    <div class="cell-task">拆解 5 支 TikTok + Meta 廣告</div>
+                    <div class="cell-notify"><i class="fab fa-slack"></i> <div>#自動化訊息來源<br><strong>@阿韋</strong></div></div>
+                </div>
+                <div class="table-row">
+                    <div class="cell-time">每週五 09:00</div>
+                    <div class="cell-task">額外執行：週報數據分析與摘要</div>
+                    <div class="cell-notify"><i class="fab fa-slack"></i> <div>#all-團隊主頻道</div></div>
+                </div>
+                <div class="table-row">
+                    <div class="cell-time">每週一 09:00</div>
+                    <div class="cell-task">額外執行：手冊內容週更與 PDF 生成</div>
+                    <div class="cell-notify"><i class="fab fa-slack"></i> <div>#all-團隊主頻道<br><span style="font-size:14px;">(含 PDF 連結)</span></div></div>
+                </div>
+            </div>
+
+            <!-- Scope Section -->
+            <div class="scope-section">
+                <div class="scope-title">目前監控範圍</div>
+                <div class="scope-cards">
+                    <div class="scope-card">
+                        <i class="fab fa-tiktok scope-icon" style="color: #4361EE;"></i>
+                        <div class="scope-info">
+                            <h4>TikTok 有機熱門</h4>
+                            <p>9 個精選帳號</p>
+                        </div>
+                    </div>
+                    <div class="scope-card">
+                        <i class="fab fa-facebook scope-icon" style="color: #F72585;"></i>
+                        <div class="scope-info">
+                            <h4>Meta 廣告素材</h4>
+                            <p>28 個產業清單</p>
+                        </div>
+                    </div>
+                    <div class="scope-card wip">
+                        <i class="fas fa-hard-hat scope-icon"></i>
+                        <div class="scope-info">
+                            <h4>IG Reels</h4>
+                            <p>🚧 建置中，即將上線</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

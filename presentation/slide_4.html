@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;800&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Space Grotesk', sans-serif; }
+        .slide-container { 
+            width: 1280px; 
+            min-height: 720px; 
+            background-color: #F8F9FA; 
+            position: relative;
+            padding-top: 50px;
+            overflow: hidden;
+        }
+        
+        .slide-container::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-image: 
+                linear-gradient(to right, rgba(33, 37, 41, 0.05) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(33, 37, 41, 0.05) 1px, transparent 1px);
+            background-size: 40px 40px;
+            z-index: 0;
+        }
+
+        .header {
+            position: relative;
+            z-index: 1;
+            margin: 0 60px 30px;
+            border-bottom: 4px solid #212529;
+        }
+
+        .page-title {
+            color: #212529;
+            font-size: 32px;
+            font-weight: 800;
+            margin-bottom: 16px;
+        }
+
+        .page-title span { color: #F72585; }
+
+        .content-grid {
+            position: relative;
+            z-index: 1;
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 24px;
+            margin: 0 60px;
+        }
+
+        .source-card {
+            background: white;
+            border: 1px solid #212529;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .source-card.tiktok {
+            grid-column: 1 / 7;
+            box-shadow: 6px 6px 0px #4361EE;
+        }
+
+        .source-card.meta {
+            grid-column: 7 / 13;
+            box-shadow: 6px 6px 0px #F72585;
+        }
+
+        .card-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid #212529;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .tiktok .card-header { background: #4361EE; color: white; }
+        .meta .card-header { background: #F72585; color: white; }
+
+        .card-icon {
+            font-size: 28px;
+        }
+
+        .card-title {
+            font-size: 24px;
+            font-weight: 800;
+        }
+
+        .card-body {
+            padding: 24px;
+            flex: 1;
+        }
+
+        .feature-list {
+            list-style: none;
+        }
+
+        .feature-list li {
+            font-size: 18px;
+            color: #495057;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            line-height: 1.4;
+        }
+
+        .feature-list li i {
+            margin-top: 4px;
+            font-size: 14px;
+        }
+
+        .tiktok .feature-list li i { color: #4361EE; }
+        .meta .feature-list li i { color: #F72585; }
+
+        .logic-tag {
+            display: inline-block;
+            padding: 8px 16px;
+            font-weight: 800;
+            font-size: 18px;
+            border: 1px solid #212529;
+            margin-top: 10px;
+        }
+
+        .tiktok .logic-tag { background: rgba(67, 97, 238, 0.1); color: #4361EE; }
+        .meta .logic-tag { background: rgba(247, 37, 133, 0.1); color: #F72585; }
+
+        .summary-card {
+            grid-column: 1 / 13;
+            background: #212529;
+            color: white;
+            border: 1px solid #212529;
+            padding: 30px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            margin-top: 10px;
+        }
+
+        .summary-title {
+            font-size: 20px;
+            color: #F72585;
+            font-weight: 800;
+            margin-bottom: 12px;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+        }
+
+        .summary-text {
+            font-size: 24px;
+            font-weight: 800;
+            line-height: 1.4;
+        }
+
+        .summary-text span.blue { color: #4361EE; }
+        .summary-text span.pink { color: #F72585; }
+    </style>
+</head>
+<body>
+    <div class="slide-container">
+        <div class="header">
+            <h2 class="page-title"><span>03 /</span> 雙來源系統：有機熱門 + 付費廣告，兩種爆款邏輯都抓</h2>
+        </div>
+
+        <div class="content-grid">
+            <!-- Source 1: TikTok -->
+            <div class="source-card tiktok">
+                <div class="card-header">
+                    <i class="fab fa-tiktok card-icon"></i>
+                    <div class="card-title">來源一：TikTok 有機熱門</div>
+                </div>
+                <div class="card-body">
+                    <ul class="feature-list">
+                        <li><i class="fas fa-check"></i> 監控 9 個精選帳號（涵蓋美妝、知識、生活、電商等類型）</li>
+                        <li><i class="fas fa-check"></i> 每天抓取最新 5 支影片，優先選擇觀看數最高的內容</li>
+                        <li><i class="fas fa-check"></i> 著重分析演算法推薦機制與用戶自發性分享要素</li>
+                    </ul>
+                    <div class="logic-tag">代表「自然傳播」的爆款邏輯</div>
+                </div>
+            </div>
+
+            <!-- Source 2: Meta Ads -->
+            <div class="source-card meta">
+                <div class="card-header">
+                    <i class="fab fa-facebook card-icon"></i>
+                    <div class="card-title">來源二：Meta 廣告素材</div>
+                </div>
+                <div class="card-body">
+                    <ul class="feature-list">
+                        <li><i class="fas fa-check"></i> 28 個產業清單輪流（每天鎖定並更換一個特定產業）</li>
+                        <li><i class="fas fa-check"></i> 從 Meta 廣告庫抓取正在投放、具備商業意圖的廣告影片</li>
+                        <li><i class="fas fa-check"></i> 著重分析促銷手法、產品展示與引導行動的成效</li>
+                    </ul>
+                    <div class="logic-tag">代表「付費轉換」的爆款邏輯</div>
+                </div>
+            </div>
+
+            <!-- Summary -->
+            <div class="summary-card">
+                <div class="summary-title">為什麼兩種都要？</div>
+                <div class="summary-text">
+                    有機爆款教你 <span class="blue">「怎麼讓人看下去」</span>，廣告爆款教你 <span class="pink">「怎麼讓人買單」</span><br>
+                    兩種能力都是好創製作高轉換短影音不可或缺的武器。
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

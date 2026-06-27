@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;800&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Space Grotesk', sans-serif; }
+        .slide-container { 
+            width: 1280px; 
+            min-height: 720px; 
+            background-color: #F8F9FA; 
+            position: relative;
+            padding-top: 50px;
+            overflow: hidden;
+        }
+        
+        .slide-container::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-image: 
+                linear-gradient(to right, rgba(33, 37, 41, 0.05) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(33, 37, 41, 0.05) 1px, transparent 1px);
+            background-size: 40px 40px;
+            z-index: 0;
+        }
+
+        .header {
+            position: relative;
+            z-index: 1;
+            margin: 0 60px 30px;
+            border-bottom: 4px solid #212529;
+        }
+
+        .page-title {
+            color: #212529;
+            font-size: 32px;
+            font-weight: 800;
+            margin-bottom: 16px;
+        }
+
+        .page-title span { color: #F72585; }
+
+        .content-grid {
+            position: relative;
+            z-index: 1;
+            display: grid;
+            grid-template-columns: 4fr 8fr;
+            gap: 24px;
+            margin: 0 60px;
+        }
+
+        .left-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .criteria-card {
+            background: #212529;
+            color: white;
+            border: 1px solid #212529;
+            padding: 30px;
+        }
+
+        .card-title {
+            font-size: 20px;
+            font-weight: 800;
+            color: #F72585;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .criteria-list {
+            list-style: none;
+        }
+
+        .criteria-list li {
+            font-size: 16px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .criteria-list li i {
+            color: #4361EE;
+        }
+
+        .type-card {
+            background: white;
+            border: 1px solid #212529;
+            padding: 24px;
+            box-shadow: 4px 4px 0px #4361EE;
+        }
+
+        .type-card h3 {
+            font-size: 18px;
+            font-weight: 800;
+            color: #212529;
+            margin-bottom: 16px;
+        }
+
+        .type-tags {
+            display: flex;
+            gap: 10px;
+        }
+
+        .type-tag {
+            background: #F8F9FA;
+            border: 1px solid #212529;
+            padding: 8px 16px;
+            font-size: 14px;
+            font-weight: 800;
+            color: #4361EE;
+        }
+
+        .right-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .score-row {
+            display: grid;
+            grid-template-columns: 80px 1fr 180px;
+            background: white;
+            border: 1px solid #212529;
+            align-items: center;
+        }
+
+        .score-num {
+            font-size: 32px;
+            font-weight: 800;
+            text-align: center;
+            padding: 20px;
+            border-right: 1px solid #212529;
+            color: white;
+        }
+
+        .score-desc {
+            padding: 20px;
+            font-size: 18px;
+            color: #212529;
+        }
+
+        .score-dest {
+            padding: 20px;
+            font-size: 16px;
+            font-weight: 800;
+            text-align: center;
+            border-left: 1px solid #212529;
+            background: #F8F9FA;
+        }
+
+        /* High scores */
+        .score-5 { border-color: #F72585; box-shadow: 4px 4px 0px #F72585; margin-bottom: 8px; }
+        .score-5 .score-num { background: #F72585; border-right-color: #F72585; }
+        .score-5 .score-dest { background: rgba(247, 37, 133, 0.1); color: #F72585; }
+
+        .score-4 { border-color: #4361EE; box-shadow: 4px 4px 0px #4361EE; margin-bottom: 16px; }
+        .score-4 .score-num { background: #4361EE; border-right-color: #4361EE; }
+        .score-4 .score-dest { background: rgba(67, 97, 238, 0.1); color: #4361EE; }
+
+        /* Low scores */
+        .score-3 .score-num { background: #495057; }
+        .score-2 .score-num { background: #6C757D; }
+        .score-1 .score-num { background: #ADB5BD; }
+        
+        .low-score-group {
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body>
+    <div class="slide-container">
+        <div class="header">
+            <h2 class="page-title"><span>05 /</span> 1-5 分自動評分，4-5 分才進「已驗證熱門腳本庫」</h2>
+        </div>
+
+        <div class="content-grid">
+            <div class="left-panel">
+                <div class="criteria-card">
+                    <div class="card-title">評分依據 (6 個維度)</div>
+                    <ul class="criteria-list">
+                        <li><i class="fas fa-times"></i> 鉤子強度</li>
+                        <li><i class="fas fa-times"></i> 情緒弧線</li>
+                        <li><i class="fas fa-times"></i> 腳本結構完整性</li>
+                        <li><i class="fas fa-times"></i> 視覺錘清晰度</li>
+                        <li><i class="fas fa-times"></i> 語言釘記憶度</li>
+                        <li><i class="fas fa-times"></i> 可複製性</li>
+                    </ul>
+                </div>
+
+                <div class="type-card">
+                    <h3>自動分類判斷邏輯</h3>
+                    <div class="type-tags">
+                        <div class="type-tag"><i class="fas fa-user"></i> IP 型 (建立品牌)</div>
+                        <div class="type-tag"><i class="fas fa-shopping-cart"></i> 導購型 (直接帶貨)</div>
+                    </div>
+                    <p style="font-size: 14px; color: #495057; margin-top: 12px; line-height: 1.4;">
+                        系統會根據內容特徵，自動將高分素材分流至對應的子庫房。
+                    </p>
+                </div>
+            </div>
+
+            <div class="right-panel">
+                <div class="score-row score-5">
+                    <div class="score-num">5</div>
+                    <div class="score-desc"><strong>完美爆款</strong><br><span style="font-size: 14px; color: #495057;">各維度表現全滿，具備極高參考價值</span></div>
+                    <div class="score-dest">35 庫<br><span style="font-size: 12px; font-weight: 400;">高優先複用</span></div>
+                </div>
+
+                <div class="score-row score-4">
+                    <div class="score-num">4</div>
+                    <div class="score-desc"><strong>高品質素材</strong><br><span style="font-size: 14px; color: #495057;">整體優秀，具備 1-2 個突出亮點</span></div>
+                    <div class="score-dest">35 庫<br><span style="font-size: 12px; font-weight: 400;">可複用</span></div>
+                </div>
+
+                <div class="low-score-group">
+                    <div class="score-row score-3">
+                        <div class="score-num">3</div>
+                        <div class="score-desc"><strong>普通表現</strong><br><span style="font-size: 14px; color: #495057;">有部分參考價值，但不構成爆款要件</span></div>
+                        <div class="score-dest" style="color: #495057;">02 庫<br><span style="font-size: 12px; font-weight: 400;">備查</span></div>
+                    </div>
+
+                    <div class="score-row score-2">
+                        <div class="score-num">2</div>
+                        <div class="score-desc"><strong>低品質素材</strong><br><span style="font-size: 14px; color: #495057;">僅極少數元素可供參考</span></div>
+                        <div class="score-dest" style="color: #495057;">02 庫<br><span style="font-size: 12px; font-weight: 400;">備查</span></div>
+                    </div>
+
+                    <div class="score-row score-1">
+                        <div class="score-num">1</div>
+                        <div class="score-desc"><strong>無效素材</strong><br><span style="font-size: 14px; color: #495057;">完全不值得學習或複製</span></div>
+                        <div class="score-dest" style="color: #495057;">02 庫<br><span style="font-size: 12px; font-weight: 400;">存檔</span></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

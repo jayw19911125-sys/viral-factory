@@ -1,0 +1,184 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;800&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Space Grotesk', sans-serif; }
+        .slide-container { 
+            width: 1280px; 
+            min-height: 720px; 
+            background-color: #F8F9FA; 
+            position: relative;
+            padding-top: 50px;
+            overflow: hidden;
+        }
+        
+        .slide-container::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-image: 
+                linear-gradient(to right, rgba(33, 37, 41, 0.05) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(33, 37, 41, 0.05) 1px, transparent 1px);
+            background-size: 40px 40px;
+            z-index: 0;
+        }
+
+        .header {
+            position: relative;
+            z-index: 1;
+            margin: 0 60px 18px;
+            border-bottom: 4px solid #212529;
+        }
+
+        .page-title {
+            color: #212529;
+            font-size: 32px;
+            font-weight: 800;
+            margin-bottom: 16px;
+        }
+
+        .page-title span { color: #F72585; }
+
+        /* reduced gap and inner paddings to save vertical space */
+        .flow-container {
+            position: relative;
+            z-index: 1;
+            margin: 0 60px;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .flow-step {
+            background: white;
+            border: 1px solid #212529;
+            display: grid;
+            grid-template-columns: 180px 1fr;
+            align-items: center;
+            position: relative;
+        }
+
+        .step-label {
+            background: #212529;
+            color: white;
+            padding: 14px;
+            font-size: 18px;
+            font-weight: 800;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            text-align: center;
+            border-right: 1px solid #212529;
+        }
+
+        .step-content {
+            padding: 12px 18px;
+            display: flex;
+            gap: 14px;
+            align-items: center;
+        }
+
+        .content-box {
+            background: #F8F9FA;
+            border: 1px solid #212529;
+            padding: 8px 12px;
+            font-size: 16px;
+            color: #212529;
+            font-weight: 800;
+            flex: 1;
+            text-align: center;
+        }
+
+        .content-box.highlight {
+            background: #4361EE;
+            color: white;
+            border-color: #4361EE;
+        }
+
+        .grid-box {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+            flex: 1;
+        }
+
+        .small-box {
+            border: 1px solid #212529;
+            padding: 6px;
+            font-size: 14px;
+            text-align: center;
+            background: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="slide-container">
+        <div class="header">
+            <h2 class="page-title"><span>02 /</span> 每天 09:00，系統自動完成這些事</h2>
+        </div>
+
+        <div class="flow-container">
+            <!-- Step 1 -->
+            <div class="flow-step">
+                <div class="step-label">1. 輸入來源</div>
+                <div class="step-content">
+                    <div class="content-box">TikTok 熱門帳號監控<br><span style="font-weight:400;font-size:14px">9 個精選帳號</span></div>
+                    <i class="fas fa-plus" style="color: #212529;"></i>
+                    <div class="content-box">Meta 廣告素材<br><span style="font-weight:400;font-size:14px">28 個產業輪流</span></div>
+                </div>
+            </div>
+
+            <!-- Step 2 -->
+            <div class="flow-step">
+                <div class="step-label" style="background: #4361EE;">2. AI 深度拆解</div>
+                <div class="step-content">
+                    <div class="content-box highlight" style="flex: 0.4; padding:8px 10px;">GPT-4.1-mini</div>
+                    <i class="fas fa-cogs" style="color: #4361EE;"></i>
+                    <div class="content-box" style="flex: 0.6;">12 個維度深度分析 × 6 個結構標籤</div>
+                </div>
+            </div>
+
+            <!-- Step 3 -->
+            <div class="flow-step">
+                <div class="step-label">3. 評分與分類</div>
+                <div class="step-content">
+                    <div class="content-box">1-5 分自動評分系統</div>
+                    <i class="fas fa-filter" style="color: #212529;"></i>
+                    <div class="content-box">IP 型 vs 導購型 自動判斷</div>
+                </div>
+            </div>
+
+            <!-- Step 4 -->
+            <div class="flow-step">
+                <div class="step-label">4. 素材分配</div>
+                <div class="step-content" style="padding: 10px 18px;">
+                    <div class="grid-box">
+                        <div class="small-box"><strong>03 庫</strong> | 鉤子</div>
+                        <div class="small-box"><strong>04 庫</strong> | CTA</div>
+                        <div class="small-box"><strong>05 庫</strong> | 腳本結構</div>
+                        <div class="small-box"><strong>06 庫</strong> | 視覺錘</div>
+                        <div class="small-box"><strong>07 庫</strong> | 語言釘</div>
+                        <div class="small-box" style="background: #F72585; color: white; border-color: #F72585;"><strong>35 庫</strong> | 高分腳本</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Step 5 -->
+            <div class="flow-step">
+                <div class="step-label">5. 自動通知</div>
+                <div class="step-content">
+                    <div class="content-box" style="border-color: #F72585; border-width: 2px;">
+                        <i class="fab fa-slack" style="color: #E01E5A; margin-right: 8px;"></i> Slack #自動化訊息來源 @阿韋
+                    </div>
+                    <div class="content-box">每週五自動週報分析</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

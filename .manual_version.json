@@ -1,0 +1,136 @@
+{
+  "version": "3.3.1",
+  "major": 3,
+  "minor": 3,
+  "patch": 1,
+  "last_updated": "2026-06-26 09:12",
+  "file_hashes": {
+    "viral_factory.py": "780d2a737d7914b5bbc8aa651a7860a7",
+    "meta_ads_fetcher.py": "285fc34db77c1f586290515365ee879e",
+    "script_scorer.py": "5a48206cef214d7ca161a56373b24555",
+    "script_distributor.py": "40938f9a12ca4ae3bf524611e137cdc4",
+    "daily_run.py": "a4f007767377dadbbb17dd8b0bc4dd26",
+    "weekly_report.py": "35fa93af372f30acf9567fbd231f49e9",
+    "weekly_manual_updater.py": "8c5e58fb9415faac21fd46745b1aeebb",
+    "monitor_accounts.json": "36819c865af98e73f9ee891d35841d9c"
+  },
+  "changelog": [
+    {
+      "version": "3.3.1",
+      "date": "2026-06-26",
+      "type": "patch",
+      "changes": [
+        "今日拆解：成功 5 支（有機 + Meta廣告）",
+        "評分分佈：{'5分': 0, '4分': 5, '3分': 0, '2分': 0, '1分': 0}",
+        "高分入庫（35庫）：5 支"
+      ]
+    },
+    {
+      "version": "3.3.0",
+      "date": "2026-06-25",
+      "type": "minor",
+      "changes": [
+        "每日拆解資料更新",
+        "腳本更新：script_distributor.py",
+        "今日拆解：成功 6 支（有機 + Meta廣告）",
+        "評分分佈：{'5分': 0, '4分': 6, '3分': 0, '2分': 0, '1分': 0}",
+        "高分入庫（35庫）：6 支"
+      ]
+    },
+    {
+      "version": "3.2.4",
+      "date": "2026-06-24",
+      "type": "patch",
+      "changes": [
+        "今日拆解：成功 6 支（有機 + Meta廣告）",
+        "評分分佈：{'5分': 0, '4分': 2, '3分': 4, '2分': 0, '1分': 0}",
+        "高分入庫（35庫）：2 支"
+      ]
+    },
+    {
+      "version": "3.2.3",
+      "date": "2026-06-23",
+      "type": "patch",
+      "changes": [
+        "今日拆解：成功 6 支（有機 + Meta廣告）",
+        "評分分佈：{'5分': 0, '4分': 4, '3分': 2, '2分': 0, '1分': 0}",
+        "高分入庫（35庫）：4 支"
+      ]
+    },
+    {
+      "version": "3.2.2",
+      "date": "2026-06-22",
+      "type": "patch",
+      "changes": [
+        "週報自動更新：本週新增拆解 0 筆",
+        "高分腳本入庫 0 支（IP型 0 / 導購型 0）",
+        "本週摘要：本週系統整體表現偏弱，所有庫皆無新增紀錄，且高分腳本數量為零，需高度關注內容產出動能。最值得注意的是..."
+      ]
+    },
+    {
+      "version": "3.2.1",
+      "date": "2026-06-22",
+      "type": "patch",
+      "changes": [
+        "今日拆解：成功 6 支（有機 + Meta廣告）",
+        "評分分佈：{'5分': 0, '4分': 2, '3分': 4, '2分': 0, '1分': 0}",
+        "高分入庫（35庫）：2 支"
+      ]
+    },
+    {
+      "version": "3.2.0",
+      "date": "2026-06-19",
+      "type": "minor",
+      "changes": [
+        "每日拆解資料更新",
+        "腳本更新：viral_factory.py",
+        "今日拆解：成功 4 支（有機 + Meta廣告）",
+        "評分分佈：{'5分': 0, '4分': 2, '3分': 2, '2分': 0, '1分': 0}",
+        "高分入庫（35庫）：2 支"
+      ]
+    },
+    {
+      "version": "3.1.0",
+      "date": "2026-06-17",
+      "type": "minor",
+      "changes": [
+        "每日拆解資料更新",
+        "腳本更新：viral_factory.py, meta_ads_fetcher.py, script_scorer.py, script_distributor.py, daily_run.py, weekly_report.py, weekly_manual_updater.py, monitor_accounts.json",
+        "今日拆解：成功 0 支（有機 + Meta廣告）",
+        "評分分佈：{'5分': 0, '4分': 0, '3分': 0, '2分': 0, '1分': 0}",
+        "高分入庫（35庫）：0 支"
+      ]
+    },
+    {
+      "version": "3.0.2",
+      "date": "2026-06-15",
+      "type": "minor",
+      "changes": [
+        "Slack 通知改為 #自動化訊息來源 頻道並 @阿韋",
+        "Meta 產業清單從 12 個擴充至 28 個",
+        "手冊新增 6 大鉤子類型、6 種人設類型完整說明",
+        "手冊新增所有庫房 Notion 直接連結",
+        "修正 TikTok/Reels 監控說明（目前僅 TikTok）"
+      ]
+    },
+    {
+      "version": "3.0.1",
+      "date": "2026-06-13",
+      "type": "minor",
+      "changes": [
+        "新增 weekly_manual_updater.py 手冊自動週更系統",
+        "新增版本自動更新機制（manual_version_tracker.py）"
+      ]
+    },
+    {
+      "version": "3.0.0",
+      "date": "2026-06-12",
+      "type": "major",
+      "changes": [
+        "系統初始建立：雙來源抓片（TikTok + Meta廣告）",
+        "12 欄位 GPT 拆解 + 評分系統（1-5分）",
+        "素材自動分配（03/04/05/06/07/35 庫）"
+      ]
+    }
+  ]
+}
