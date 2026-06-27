@@ -352,7 +352,39 @@ def write_to_notion_via_mcp(url: str, platform: str, transcript: str, analysis: 
     industry = analysis.get('產業適用性分析', {})
     invalid = analysis.get('無效因素識別', [])
 
+    # 企劃師應用建議
+    planner_tips = analysis.get('企劃師應用建議', {})
+    planner_topic = planner_tips.get('本週可用選題', '待補充') if isinstance(planner_tips, dict) else '待補充'
+    planner_formula = planner_tips.get('可套用的開場白公式', '待補充') if isinstance(planner_tips, dict) else '待補充'
+    planner_client = planner_tips.get('適合哪類客戶', '待補充') if isinstance(planner_tips, dict) else '待補充'
+    # 剪輯師應用建議
+    editor_tips = analysis.get('剪輯師應用建議', {})
+    editor_cut = editor_tips.get('前3秒剪輯指令', '待補充') if isinstance(editor_tips, dict) else '待補充'
+    editor_timeline = editor_tips.get('節奏時間軸', '待補充') if isinstance(editor_tips, dict) else '待補充'
+    editor_visual = editor_tips.get('視覺錘強調方式', '待補充') if isinstance(editor_tips, dict) else '待補充'
+    editor_audio = editor_tips.get('音效與音樂建議', '待補充') if isinstance(editor_tips, dict) else '待補充'
+    # 爆款三層分析
+    why_viral = analysis.get('為什麼會爆款', '待補充')
+    why_good = analysis.get('為什麼是好影片', '待補充')
+    effect = analysis.get('能達到什麼效果', '待補充')
+    video_type_val = analysis.get('影片類型', '未分類')
+
     content = (
+        f"## 📋 企劃師速查區\n\n"
+        f"> 影片類型：{video_type_val}\n\n"
+        f"**🔥 為什麼會爆款？**\n{why_viral}\n\n"
+        f"**🎯 能達到什麼效果？**\n{effect}\n\n"
+        f"**✅ 本週可用選題：**\n{planner_topic}\n\n"
+        f"**📝 可套用開場白公式：**\n{planner_formula}\n\n"
+        f"**🎯 適合哪類客戶：**\n{planner_client}\n\n"
+        f"---\n\n"
+        f"## 🎬 剪輯師速查區\n\n"
+        f"**🌟 為什麼是好影片？**\n{why_good}\n\n"
+        f"**⏱️ 前3秒剪輯指令：**\n{editor_cut}\n\n"
+        f"**📊 節奏時間軸：**\n{editor_timeline}\n\n"
+        f"**🔨 視覺錘強調方式：**\n{editor_visual}\n\n"
+        f"**🎵 音效與音樂建議：**\n{editor_audio}\n\n"
+        f"---\n\n"
         f"## 🎣 鉤子類型與設計\n\n{fmt(hook)}\n\n"
         f"## 🔨 視覺錘 × 語言釘\n\n{fmt(visual_hammer)}\n\n"
         f"## 🎭 人設定位分析\n\n{fmt(persona)}\n\n"
@@ -381,6 +413,10 @@ def write_to_notion_via_mcp(url: str, platform: str, transcript: str, analysis: 
                     "是否已借鏡": "__NO__",
                     "類別標籤": tags_json,
                     "來源類型": "Meta廣告" if "facebook.com/ads" in url or "meta" in url.lower() else "有機熱門",
+                    "影片類型": video_type_val,
+                    "本週可用選題": planner_topic[:200] if planner_topic else "",
+                    "可套用開場白公式": planner_formula[:200] if planner_formula else "",
+                    "適合哪類客戶": planner_client[:200] if planner_client else "",
                     **({"鉤子大類": hook_type} if hook_type else {}),
                     **({"視覺錘類型": visual_hammer_type} if visual_hammer_type else {}),
                     **({"CTA類型": cta_type} if cta_type else {}),
