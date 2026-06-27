@@ -29,6 +29,7 @@ NOTION_DB_ID = "82097a06-fae5-83bd-a8c3-87236d3713aa"
 
 # Slack 設定
 SLACK_AWEI_ID    = "U0B4FG0ER89"   # 阿韋 User ID（用於 @mention）
+SLACK_XINXIN_ID  = "U0BA2DKQ7GF"   # 小鑫 User ID（用於 @mention）
 SLACK_TEAM_CH    = "C0AQG307XJT"   # #all-團隊主頻道
 SLACK_AUTO_CH    = "C0AUH4QKF5M"   # #自動化訊息來源（影音類別）
 
@@ -491,6 +492,7 @@ def process_single_video(url: str, whisper_available: bool = True) -> dict:
 
             msg_planner = (
                 f"💡 *今日爆款入庫（企劃版）* | {today}\n"
+                f"<@{SLACK_XINXIN_ID}> 新素材入庫，請查收\n"
                 f"影片類型：{video_type} | 平台：{platform}\n"
                 f"*標題：* {title}\n\n"
                 f"🔥 *為什麼會爆款？*\n{why_viral}\n\n"
@@ -576,7 +578,7 @@ def process_batch(urls: list, whisper_available: bool = True) -> list:
 
     # 主頻道日報（小鑫 + 阿韋）
     lines = [f"📊 *今日爆款入庫日報* | {today}\n"]
-    lines.append(f"<@{SLACK_AWEI_ID}> 今日入庫完成\n")
+    lines.append(f"<@{SLACK_XINXIN_ID}> <@{SLACK_AWEI_ID}> 今日入庫完成\n")
     lines.append(f"入庫：*{len(success_items)} 支* | 失敗/跳過：{fail_count} 支")
     lines.append(f"影片類型：{type_summary}")
     lines.append(f"評分分佈：{score_summary}\n")
