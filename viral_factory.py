@@ -412,7 +412,7 @@ def write_to_notion_via_mcp(url: str, platform: str, transcript: str, analysis: 
                     "熱門音樂": analysis.get("熱門音樂", "需人工補充"),
                     "是否已借鏡": "__NO__",
                     "類別標籤": tags_json,
-                    "來源類型": "Meta廣告" if "facebook.com/ads" in url or "meta" in url.lower() else "有機熱門",
+                    "來源類型": "Meta廣告（🌍英國）" if "facebook.com/ads" in url or "meta" in url.lower() or "MOCK_" in url else "有機熱門",
                     "影片類型": video_type_val,
                     "本週可用選題": planner_topic[:200] if planner_topic else "",
                     "可套用開場白公式": planner_formula[:200] if planner_formula else "",
@@ -526,10 +526,14 @@ def process_single_video(url: str, whisper_available: bool = True) -> dict:
             formula = planner_tips.get('可套用的開場白公式', '') if isinstance(planner_tips, dict) else ''
             client_fit = planner_tips.get('適合哪類客戶', '') if isinstance(planner_tips, dict) else ''
 
+            # 判斷是否為 Meta 國外廣告
+            is_meta_foreign = "facebook.com/ads" in url or "meta" in url.lower() or "MOCK_" in url
+            foreign_tag = "\n> 🌍 此為國外廣告（英國市場），用於學習創意手法，不代表台灣市場現況" if is_meta_foreign else ""
+
             msg_planner = (
                 f"💡 *今日爆款入庫（企劃版）* | {today}\n"
                 f"<@{SLACK_XINXIN_ID}> 新素材入庫，請查收\n"
-                f"影片類型：{video_type} | 平台：{platform}\n"
+                f"影片類型：{video_type} | 平台：{platform}{foreign_tag}\n"
                 f"*標題：* {title}\n\n"
                 f"🔥 *為什麼會爆款？*\n{why_viral}\n\n"
                 f"🎯 *能達到什麼效果？*\n{effect}\n\n"
@@ -550,7 +554,7 @@ def process_single_video(url: str, whisper_available: bool = True) -> dict:
             msg_editor = (
                 f"🎬 *今日爆款入庫（剪輯版）* | {today}\n"
                 f"<@{SLACK_AWEI_ID}> 新素材入庫，請查收\n"
-                f"影片類型：{video_type} | 平台：{platform}\n"
+                f"影片類型：{video_type} | 平台：{platform}{foreign_tag}\n"
                 f"*標題：* {title}\n\n"
                 f"🌟 *為什麼是好影片？*\n{why_good}\n\n"
                 f"⏱️ *前3秒剪輯指令：*\n{cut_cmd}\n\n"

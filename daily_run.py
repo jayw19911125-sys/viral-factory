@@ -79,11 +79,16 @@ def main():
         organic_urls = get_daily_urls()
         logger.info(f"有機內容：{len(organic_urls)} 支")
 
-        # Step 1-B：取得 Meta 廣告素材 URL（按產業輪流）
-        logger.info("\n[Step 1-B] 抓取 Meta 廣告高成效素材（按產業輪流）...")
+        # Step 1-B：取得 Meta 廣告素材（按產業輪流，英國市場）
+        logger.info("\n[Step 1-B] 抓取 Meta 廣告高成效素材（英國市場，按產業輪流）...")
+        meta_items = []   # list of dict: {url, country_label, source_note, ...}
         try:
-            meta_urls = get_meta_ad_urls_simple()
-            logger.info(f"Meta 廣告：{len(meta_urls)} 支")
+            meta_items = get_meta_ad_urls_simple()  # 回傳字典清單
+            meta_urls = [item["url"] for item in meta_items if not item.get("is_mock", False)]
+            meta_mock_count = sum(1 for item in meta_items if item.get("is_mock", False))
+            logger.info(f"Meta 廣告：{len(meta_urls)} 支真實 + {meta_mock_count} 支模擬（已略過）")
+            if meta_urls:
+                logger.info(f"  標註：🌍 國外廣告（英國）")
         except Exception as e:
             logger.warning(f"Meta 廣告抓取失敗（不影響有機內容）：{e}")
             meta_urls = []
@@ -97,7 +102,7 @@ def main():
 
         logger.info(
             f"\n今日待拆合計：{len(urls)} 支"
-            f"（有機 {len(organic_urls)} + Meta廣告 {len(meta_urls)}）"
+            f"（有機 {len(organic_urls)} + Meta廣告英國 {len(meta_urls)}）"
         )
 
         # Step 2：批次拆解（雙來源合併處理）
@@ -163,7 +168,7 @@ def main():
         logger.info(f"任務完成 | 耗時 {elapsed}s")
         logger.info(f"拆解：成功 {len(success_results)} 支 | 失敗/跳過 {len(failed_results)} 支")
         logger.info(f"  有機內容：{sum(1 for r in success_results if r.get('url','') in organic_urls)} 支")
-        logger.info(f"  Meta廣告：{sum(1 for r in success_results if r.get('url','') in meta_urls)} 支")
+        logger.info(f"  Meta廣告（英國）：{sum(1 for r in success_results if r.get('url','') in meta_urls)} 支")
         logger.info(f"評分分佈：{score_summary}")
         logger.info(f"類型分佈：{type_summary}")
         logger.info(f"高分入庫（35庫）：{high_score_count} 支")
