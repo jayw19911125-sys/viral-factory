@@ -1,12 +1,14 @@
 """
-爆款短影音週報分析系統 v1.0
+爆款短影音週報分析系統 v1.1
 好創整合行銷 | 子權 2026-06-09
+修復：2026-06-26 - 修正 Notion MCP 工具名稱與解析邏輯
 
 執行時機：每週五 10:00（Manus 排程）
 流程：Notion 爆款拆解庫（本週資料）→ GPT 規律分析 → Slack #all-團隊主頻道
 """
 
 import os
+import re
 import json
 import subprocess
 from datetime import datetime, timedelta
@@ -45,15 +47,29 @@ WEEKLY_ANALYSIS_PROMPT = """
 }}
 """
 
+def _parse_mcp_output(stdout: str) -> dict:
+    """統一解析 manus-mcp-cli 的輸出，處理各種格式"""
+    raw = stdout.strip()
+    # 移除 ANSI 控制碼
+    raw = re.sub(r'\x1b\[[0-9;]*m', '', raw)
+    # 取 Tool execution result: 之後的部分
+    if "Tool execution result:" in raw:
+        raw = raw.split("Tool execution result:")[-1].strip()
+    if not raw:
+        return {}
+    try:
+        return json.loads(raw)
+    except Exception:
+        return {}
+
 def get_this_week_entries() -> list:
     """從 Notion 爆款拆解庫讀取本週入庫的影片"""
-    # 計算本週一的日期
     today = datetime.now()
     monday = today - timedelta(days=today.weekday())
     monday_str = monday.strftime("%Y-%m-%d")
 
     cmd = [
-        "manus-mcp-cli", "tool", "call", "notion-query-database",
+        "manus-mcp-cli", "tool", "call", "notion-query-data-sources",
         "--server", "notion",
         "--input", json.dumps({
             "data_source_id": NOTION_DB_ID,
@@ -69,37 +85,54 @@ def get_this_week_entries() -> list:
         print(f"Notion 查詢失敗：{result.stderr[:200]}")
         return []
 
-    try:
-        raw = result.stdout.split("Tool execution result:\n")[-1].strip()
-        data = json.loads(raw)
-        return data.get("results", [])
-    except Exception as e:
-        print(f"解析 Notion 回傳失敗：{e}")
+    data = _parse_mcp_output(result.stdout)
+    if not data:
+        print("Notion 回傳空值，嘗試備用查詢...")
+        return _fallback_search_entries(monday_str)
+    # notion-query-data-sources 回傳格式
+    return data.get("results", data.get("pages", []))
+
+
+def _fallback_search_entries(monday_str: str) -> list:
+    """備用方案：用 notion-search 搜尋本週入庫的影片"""
+    cmd = [
+        "manus-mcp-cli", "tool", "call", "notion-search",
+        "--server", "notion",
+        "--input", json.dumps({
+            "query": "爆款拆解",
+            "filters": {
+                "created_date_range": {
+                    "start_date": monday_str
+                }
+            },
+            "page_size": 25
+        })
+    ]
+    result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
+    if result.returncode != 0:
         return []
+    data = _parse_mcp_output(result.stdout)
+    return data.get("results", [])
 
 
 def fetch_page_content(page_id: str) -> str:
     """讀取單一 Notion 頁面的內容（拆解詳情）"""
+    page_url = f"https://www.notion.so/{page_id.replace('-', '')}"
     cmd = [
-        "manus-mcp-cli", "tool", "call", "notion-get-page-content",
+        "manus-mcp-cli", "tool", "call", "notion-fetch",
         "--server", "notion",
-        "--input", json.dumps({"page_id": page_id})
+        "--input", json.dumps({"url": page_url})
     ]
     result = subprocess.run(cmd, capture_output=True, text=True, timeout=20)
     if result.returncode != 0:
         return ""
     try:
-        raw = result.stdout.split("Tool execution result:\n")[-1].strip()
-        data = json.loads(raw)
-        # 取出純文字內容
-        blocks = data.get("blocks", [])
-        texts = []
-        for block in blocks:
-            bt = block.get("type", "")
-            rich = block.get(bt, {}).get("rich_text", [])
-            for rt in rich:
-                texts.append(rt.get("plain_text", ""))
-        return " ".join(texts)[:1500]
+        raw = result.stdout.strip()
+        raw = re.sub(r'\x1b\[[0-9;]*m', '', raw)
+        if "Tool execution result:" in raw:
+            raw = raw.split("Tool execution result:")[-1].strip()
+        # notion-fetch 直接回傳 Markdown 文字
+        return raw[:1500]
     except Exception:
         return ""
 
@@ -110,7 +143,6 @@ def build_analysis_data(entries: list) -> str:
     for i, entry in enumerate(entries, 1):
         props = entry.get("properties", {})
 
-        # 取得各欄位值
         def get_text(prop_name):
             prop = props.get(prop_name, {})
             ptype = prop.get("type", "")
@@ -151,7 +183,7 @@ def build_analysis_data(entries: list) -> str:
 
 def analyze_with_gpt(data_text: str, count: int) -> dict:
     """用 GPT 分析跨影片共同規律"""
-    client = OpenAI()  # 沙盒免費代理
+    client = OpenAI()
     prompt = WEEKLY_ANALYSIS_PROMPT.format(data=data_text, count=count)
     response = client.chat.completions.create(
         model="gpt-4.1-mini",

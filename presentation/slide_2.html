@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;800&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Space Grotesk', sans-serif; }
+        .slide-container { 
+            width: 1280px; 
+            min-height: 720px; 
+            background-color: #F8F9FA; 
+            position: relative;
+            padding-top: 60px;
+            overflow: hidden;
+        }
+        
+        .slide-container::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-image: 
+                linear-gradient(to right, rgba(33, 37, 41, 0.05) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(33, 37, 41, 0.05) 1px, transparent 1px);
+            background-size: 40px 40px;
+            z-index: 0;
+        }
+
+        .header {
+            position: relative;
+            z-index: 1;
+            margin: 0 60px 40px;
+            border-bottom: 4px solid #212529;
+        }
+
+        .page-title {
+            color: #212529;
+            font-size: 32px;
+            font-weight: 800;
+            margin-bottom: 16px;
+        }
+
+        .page-title span { color: #F72585; }
+
+        .content-grid {
+            position: relative;
+            z-index: 1;
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            gap: 24px;
+            margin: 0 60px;
+        }
+
+        .pain-points-section {
+            grid-column: 1 / 8;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .section-label {
+            font-size: 16px;
+            font-weight: 800;
+            color: #495057;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 8px;
+        }
+
+        .pain-card {
+            background: white;
+            border: 1px solid #212529;
+            padding: 24px;
+            display: grid;
+            grid-template-columns: 48px 1fr;
+            gap: 16px;
+            align-items: start;
+        }
+
+        .pain-icon {
+            width: 48px;
+            height: 48px;
+            background: #F8F9FA;
+            border: 1px solid #212529;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #F72585;
+            font-size: 20px;
+        }
+
+        .pain-content h3 {
+            font-size: 20px;
+            color: #212529;
+            font-weight: 800;
+            margin-bottom: 8px;
+        }
+
+        .pain-content p {
+            font-size: 16px;
+            color: #495057;
+            line-height: 1.5;
+        }
+
+        .solution-section {
+            grid-column: 8 / 13;
+            background: #4361EE;
+            border: 1px solid #212529;
+            padding: 40px;
+            color: white;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            position: relative;
+        }
+
+        .solution-section::after {
+            content: '';
+            position: absolute;
+            top: 20px; right: 20px;
+            width: 40px; height: 40px;
+            border-top: 4px solid #F8F9FA;
+            border-right: 4px solid #F8F9FA;
+        }
+
+        .solution-label {
+            font-size: 16px;
+            font-weight: 800;
+            color: rgba(255,255,255,0.7);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 24px;
+        }
+
+        .solution-title {
+            font-size: 32px;
+            font-weight: 800;
+            line-height: 1.3;
+            margin-bottom: 24px;
+        }
+
+        .solution-list {
+            list-style: none;
+        }
+
+        .solution-list li {
+            font-size: 20px;
+            line-height: 1.5;
+            margin-top: 16px;
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+        }
+
+        .solution-list li i {
+            color: #F72585;
+            margin-top: 6px;
+            font-size: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div class="slide-container">
+        <div class="header">
+            <h2 class="page-title"><span>01 /</span> 「要拍什麼？」這個問題，以前靠感覺，現在靠數據</h2>
+        </div>
+
+        <div class="content-grid">
+            <div class="pain-points-section">
+                <div class="section-label">PAST PAIN POINTS</div>
+                
+                <div class="pain-card">
+                    <div class="pain-icon"><i class="fas fa-question"></i></div>
+                    <div class="pain-content">
+                        <h3>不知道爆款的共同規律</h3>
+                        <p>每支影片為什麼爆？鉤子怎麼設計？沒有系統性的答案，只能憑直覺猜測。</p>
+                    </div>
+                </div>
+
+                <div class="pain-card">
+                    <div class="pain-icon"><i class="fas fa-search"></i></div>
+                    <div class="pain-content">
+                        <h3>競品分析全靠人工</h3>
+                        <p>手動滑 TikTok、看廣告庫，耗時費力且樣本數不完整，難以看清全貌。</p>
+                    </div>
+                </div>
+
+                <div class="pain-card">
+                    <div class="pain-icon"><i class="fas fa-box-open"></i></div>
+                    <div class="pain-content">
+                        <h3>好素材沒有沉澱</h3>
+                        <p>看過的好影片沒有記錄，下次要找靈感又要重來，無法形成反覆查閱的知識庫。</p>
+                    </div>
+                </div>
+            </div>
+
+            <div class="solution-section">
+                <div class="solution-label">NEW SOLUTION</div>
+                <h3 class="solution-title">建立一套每天自動運作的拆解系統</h3>
+                <ul class="solution-list">
+                    <li><i class="fas fa-arrow-right"></i> 將爆款影片的規律量化</li>
+                    <li><i class="fas fa-arrow-right"></i> 轉化為可複用的模組化素材</li>
+                    <li><i class="fas fa-arrow-right"></i> 形成好創專屬的知識資產</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

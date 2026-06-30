@@ -51,27 +51,42 @@ def call_notion_mcp(tool_name: str, input_data: dict) -> dict:
         return {"error": str(e)}
 
 
+def _get_nested(analysis: dict, *keys, default=""):
+    """安全取得巢狀 dict 的值，支援多層 key"""
+    val = analysis
+    for k in keys:
+        if isinstance(val, dict):
+            val = val.get(k, default)
+        else:
+            return default
+    return val if val is not None else default
+
+
 def write_to_hook_library(analysis: dict, source_url: str):
     """將鉤子公式寫入 03｜開頭鉤子庫"""
-    hook_type = analysis.get("hook_type", "")
-    hook_formula = analysis.get("hook_formula", "")
-    industry = analysis.get("industry", "通用")
-    platform = analysis.get("platform", "")
+    hook_data = analysis.get("鉤子類型與設計", {})
+    hook_type = _get_nested(hook_data, "鉤子類型") or analysis.get("鉤子大類", "")
+    hook_formula = _get_nested(hook_data, "可套用公式") or _get_nested(hook_data, "鉤子公式", "")
+    hook_design = _get_nested(hook_data, "鉤子設計說明") or _get_nested(hook_data, "設計說明", "")
+    industry_data = analysis.get("產業適用性分析", {})
+    industry = _get_nested(industry_data, "原始產業") or "通用"
+    platform = analysis.get("平台", "") or analysis.get("platform", "")
+    neuroscience = analysis.get("神經科學機制", "")
 
-    if not hook_formula:
+    if not hook_formula and not hook_type:
         return
 
-    content = f"""# {hook_type}｜{hook_formula[:30]}
+    content = f"""# {hook_type}｜{str(hook_formula)[:30]}
 
 **鉤子類型**：{hook_type}
 **完整公式**：{hook_formula}
 **適用產業**：{industry}
 **平台**：{platform}
 **來源影片**：{source_url}
-**神經科學機制**：{analysis.get("neuroscience", "")}
+**神經科學機制**：{neuroscience}
 
 ## 使用說明
-{analysis.get("hook_design", "")}
+{hook_design}
 """
     call_notion_mcp("notion-create-pages", {
         "data_source_id": NOTION_DB_IDS["開頭鉤子庫"],
@@ -84,11 +99,13 @@ def write_to_hook_library(analysis: dict, source_url: str):
 
 def write_to_cta_library(analysis: dict, source_url: str):
     """將 CTA 公式寫入 04｜結尾呼籲庫"""
-    cta_type = analysis.get("cta_type", "")
-    cta_design = analysis.get("cta_design", "")
-    industry = analysis.get("industry", "通用")
+    cta_data = analysis.get("CTA設計分析", {})
+    cta_type = _get_nested(cta_data, "CTA類型") or analysis.get("CTA類型", "")
+    cta_design = _get_nested(cta_data, "設計分析") or _get_nested(cta_data, "CTA設計", "")
+    industry_data = analysis.get("產業適用性分析", {})
+    industry = _get_nested(industry_data, "原始產業") or "通用"
 
-    if not cta_design:
+    if not cta_design and not cta_type:
         return
 
     content = f"""# {cta_type}｜{industry}
@@ -107,9 +124,11 @@ def write_to_cta_library(analysis: dict, source_url: str):
 
 def write_to_structure_library(analysis: dict, source_url: str):
     """將腳本結構寫入 05｜腳本結構庫"""
-    script_structure = analysis.get("script_structure", "")
-    industry = analysis.get("industry", "通用")
-    platform = analysis.get("platform", "")
+    structure_data = analysis.get("影片結構拆解", {})
+    script_structure = _get_nested(structure_data, "結構公式") or str(structure_data) if structure_data else ""
+    industry_data = analysis.get("產業適用性分析", {})
+    industry = _get_nested(industry_data, "原始產業") or "通用"
+    platform = analysis.get("平台", "") or analysis.get("platform", "")
 
     if not script_structure:
         return
@@ -132,9 +151,12 @@ def write_to_structure_library(analysis: dict, source_url: str):
 
 def write_to_visual_hammer_library(analysis: dict, source_url: str):
     """將視覺錘分析寫入 06｜視覺錘庫"""
-    visual_hammer_type = analysis.get("visual_hammer_type", "")
-    visual_analysis = analysis.get("visual_analysis", "")
-    industry = analysis.get("industry", "通用")
+    visual_data = analysis.get("視覺錘分析", {})
+    visual_hammer_type = analysis.get("視覺錘類型", "") or _get_nested(visual_data, "視覺錘是什麼", "")
+    visual_analysis = _get_nested(visual_data, "視覺錘是什麼") or str(visual_data) if visual_data else ""
+    language_nail = _get_nested(visual_data, "語言釘是什麼", "")
+    industry_data = analysis.get("產業適用性分析", {})
+    industry = _get_nested(industry_data, "原始產業") or "通用"
 
     if not visual_analysis:
         return
@@ -142,7 +164,8 @@ def write_to_visual_hammer_library(analysis: dict, source_url: str):
     content = f"""# {visual_hammer_type}｜{industry}
 
 **視覺錘類型**：{visual_hammer_type}
-**分析**：{visual_analysis}
+**視覺錘分析**：{visual_analysis}
+**語言釘**：{language_nail}
 **適用產業**：{industry}
 **來源影片**：{source_url}
 """
@@ -155,8 +178,10 @@ def write_to_visual_hammer_library(analysis: dict, source_url: str):
 
 def write_to_language_nail_library(analysis: dict, source_url: str):
     """將語言釘公式寫入 07｜語言釘庫"""
-    language_nail = analysis.get("language_nail", "")
-    industry = analysis.get("industry", "通用")
+    visual_data = analysis.get("視覺錘分析", {})
+    language_nail = _get_nested(visual_data, "語言釘是什麼", "")
+    industry_data = analysis.get("產業適用性分析", {})
+    industry = _get_nested(industry_data, "原始產業") or "通用"
 
     if not language_nail:
         return
@@ -181,16 +206,21 @@ def write_to_script_library(analysis: dict, score_result: dict, source_url: str)
     db_id = NOTION_DB_IDS[db_key]
 
     score_label = score_result.get("score_label", "4分高")
-    industry = analysis.get("industry", "通用")
-    platform = analysis.get("platform", "")
-    transcript = analysis.get("transcript", "")
-    script_structure = analysis.get("script_structure", "")
-    hook_formula = analysis.get("hook_formula", "")
-    cta_design = analysis.get("cta_design", "")
-    ad_potential = analysis.get("ad_potential", "B級小改可投")
+    industry_data = analysis.get("產業適用性分析", {})
+    industry = _get_nested(industry_data, "原始產業") or "通用"
+    platform = analysis.get("平台", "") or analysis.get("platform", "")
+    transcript = analysis.get("逐字稿", "") or analysis.get("transcript", "")
+    structure_data = analysis.get("影片結構拆解", {})
+    script_structure = _get_nested(structure_data, "結構公式") or str(structure_data) if structure_data else ""
+    hook_data = analysis.get("鉤子類型與設計", {})
+    hook_formula = _get_nested(hook_data, "可套用公式") or _get_nested(hook_data, "鉤子公式", "")
+    cta_data = analysis.get("CTA設計分析", {})
+    cta_design = _get_nested(cta_data, "設計分析") or _get_nested(cta_data, "CTA設計", "")
+    ad_data = analysis.get("廣告投放潛力評估", {})
+    ad_potential = _get_nested(ad_data, "廣告投放潛力") or analysis.get("廣告投放潛力", "B級小改可投")
 
     # 組合腳本頁面內容
-    title = analysis.get("title", "未命名腳本")
+    title = analysis.get("影片標題或主題", "") or analysis.get("title", "未命名腳本")
     content = f"""# {title}
 
 **評分**：{score_label}
@@ -249,17 +279,21 @@ def distribute_video(analysis: dict, source_url: str = ""):
     主函數：接收一支影片的完整拆解結果，分配到所有對應庫房
     analysis 是 viral_factory.py 的 GPT 拆解輸出
     """
-    print(f"\n[分配開始] {analysis.get('title', '未命名')}")
+    title_display = analysis.get("影片標題或主題", "") or analysis.get("title", "未命名")
+    print(f"\n[分配開始] {title_display}")
 
     # Step 1：評分
+    hook_data = analysis.get("鉤子類型與設計", {})
+    visual_data = analysis.get("視覺錘分析", {})
+    structure_data = analysis.get("影片結構拆解", {})
     score_result = score_video({
-        "title": analysis.get("title", ""),
-        "platform": analysis.get("platform", ""),
-        "viral_data": analysis.get("viral_data", ""),
-        "transcript": analysis.get("transcript", ""),
-        "hook": analysis.get("hook_design", ""),
-        "visual_hammer": analysis.get("visual_analysis", ""),
-        "script_structure": analysis.get("script_structure", ""),
+        "title": analysis.get("影片標題或主題", "") or analysis.get("title", ""),
+        "platform": analysis.get("平台", "") or analysis.get("platform", ""),
+        "viral_data": analysis.get("爆款數據", "") or analysis.get("viral_data", ""),
+        "transcript": analysis.get("逐字稿", "") or analysis.get("transcript", ""),
+        "hook": str(hook_data) if hook_data else analysis.get("鉤子類型與設計", ""),
+        "visual_hammer": str(visual_data) if visual_data else analysis.get("視覺錘分析", ""),
+        "script_structure": str(structure_data) if structure_data else analysis.get("影片結構拆解", ""),
         "source_type": analysis.get("source_type", "有機熱門"),
     })
     print(f"[評分] {score_result.get('score_label')} | {score_result.get('content_type')} | {score_result.get('score_reason')}")

@@ -1,0 +1,50 @@
+flowchart TD
+    START(["⏰ 每日 09:00\nManus 自動觸發"]) --> PREP
+
+    PREP["📦 準備階段\n安裝依賴套件\n拉取最新腳本\n載入環境變數"] --> STEP1A
+
+    STEP1A["Step 1-A\n🎵 抓取 TikTok/Reels\n有機熱門影片\n目標：5 支"] --> STEP1B
+
+    STEP1B["Step 1-B\n📢 抓取 Meta 廣告素材\n按產業輪流（本週：美容保養）\n目標：5 支"] --> MERGE
+
+    MERGE["合併雙來源\n有機 5 支 + Meta 廣告 5 支\n= 今日待拆 10 支"] --> STEP2
+
+    STEP2["Step 2\n🤖 GPT-4.1-mini 批次拆解\n每支影片 → 12 欄位分析\n+ 6 結構化標籤"] --> STEP3
+
+    STEP3{"拆解成功？"}
+    STEP3 -->|"✅ 成功"| STEP4
+    STEP3 -->|"❌ 失敗"| LOG["記錄錯誤\n跳過此支"]
+
+    STEP4["Step 4\n📊 智慧評分\n1～5 分評級\n判斷 IP型 / 導購型"] --> STEP5
+
+    STEP5["Step 5\n📤 素材自動分配\n寫入對應庫房\n（03/04/05/06/07）"] --> STEP6
+
+    STEP6{"分數 ≥ 4 分？"}
+    STEP6 -->|"✅ 高分"| STEP6A["寫入 35 庫\n已驗證熱門腳本庫"]
+    STEP6 -->|"❌ 一般"| STEP7
+
+    STEP6A --> STEP7
+
+    STEP7["Step 7\n📋 日報統計\n成功/失敗數量\n評分分佈\n高分入庫數"] --> SLACK
+
+    SLACK["📱 Slack 通知\n發送日報給阿韋"] --> WEEKDAY
+
+    WEEKDAY{"今天是週幾？"}
+    WEEKDAY -->|"週一"| MON["📚 手冊自動更新\n統計上週數據\n更新 PDF\n發送全團隊"]
+    WEEKDAY -->|"週五"| FRI["📊 週報分析\n爆款規律整理\n發送全團隊"]
+    WEEKDAY -->|"週二~四"| END
+
+    MON --> END
+    FRI --> END
+    LOG --> STEP7
+
+    END(["✅ 任務完成"])
+
+    style START fill:#4CAF50,color:#fff,stroke:#388E3C
+    style END fill:#4CAF50,color:#fff,stroke:#388E3C
+    style STEP2 fill:#FF9800,color:#fff,stroke:#F57C00
+    style STEP4 fill:#2196F3,color:#fff,stroke:#1565C0
+    style STEP5 fill:#9C27B0,color:#fff,stroke:#6A1B9A
+    style WEEKDAY fill:#607D8B,color:#fff,stroke:#37474F
+    style STEP3 fill:#607D8B,color:#fff,stroke:#37474F
+    style STEP6 fill:#607D8B,color:#fff,stroke:#37474F

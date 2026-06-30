@@ -28,23 +28,26 @@ WHISPER_API_KEY = os.environ.get(
 NOTION_DB_ID = "82097a06-fae5-83bd-a8c3-87236d3713aa"
 
 # Slack 設定
-SLACK_AWEI_ID    = "U0B4FG0ER89"   # 阿韋 DM
+SLACK_AWEI_ID    = "U0B4FG0ER89"   # 阿韋 User ID（用於 @mention）
+SLACK_XINXIN_ID  = "U0BA2DKQ7GF"   # 小鑫 User ID（用於 @mention）
 SLACK_TEAM_CH    = "C0AQG307XJT"   # #all-團隊主頻道
+SLACK_AUTO_CH    = "C0AUH4QKF5M"   # #自動化訊息來源（影音類別）
 
-# ─── GPT-4o 拆解 Prompt（v3.0 頂尖方法論版）────────────────
-# 基於視覺錘×語言釘×鉤子設計系統×Meta廣告投放邏輯建立
+# ─── GPT-4o 拆解 Prompt（v4.0 全類型分角色版）────────────────
+# 新增：影片類型分類（6種）、企劃師版輸出、剪輯師版輸出、爆款原因三層分析
 ANALYSIS_PROMPT = """
 你是「好創整合行銷」的頂尖短影音爆款拆解師，精通以下知識體系：
 - 視覺錘（Visual Hammer）× 語言釘（Verbal Nail）品牌定位理論
-- 五大鉤子類型：大膽宣言型、問題型、前後對比型、好奇缺口型、痛點激化型
+- 六大鉤子類型：大膽宣言型、問題型、前後對比型、好奇缺口型、痛點激化型、挑戰型
 - Meta Andromeda 演算法（2026）：素材 > 受眾，3秒留存率決定推播
 - 各產業最佳廣告素材結構（餐飲/美容/電商/服務業）
 - 人設定位系統：專家型/素人見證型/創業者型/在地達人型/生活達人型/挑戰者型
+- 六大影片類型：導購型/個人IP型/品牌IP型/UGC型/時事議題型/病毒式傳播型
 
-你的任務：對這支影片進行「頂尖拆解」，目標是讓閱讀者能直接複製這套方法論。
+你的任務：對這支影片進行「頂尖拆解」，同時產出「企劃師版」與「剪輯師版」兩份可直接使用的應用建議。
 每個欄位都要具體、有深度，給出「可直接套用的洞察」，不要空泛描述。
 
-請以 JSON 格式回傳，包含以下 12 個欄位：
+請以 JSON 格式回傳，包含以下欄位：
 
 {{
   "影片標題或主題": "用一句話描述核心主題（20字以內）",
@@ -109,7 +112,29 @@ ANALYSIS_PROMPT = """
   "無效因素識別": [
     "列出這支影片的弱點或無效元素，例如：開頭太慢/CTA太弱/靜音無法理解等"
   ],
-  
+
+  "影片類型": "必須從以下選項選一個：導購型、個人IP型、品牌IP型、UGC型、時事議題型、病毒式傳播型",
+
+  "為什麼會爆款": "用3句話以內說明：這支影片為什麼會成為爆款？核心原因是什麼？",
+
+  "為什麼是好影片": "用3句話以內說明：從影片製作品質、內容價值、觀眾體驗三個角度，說明這是一部好影片的原因",
+
+  "能達到什麼效果": "這支影片能達到什麼商業或傳播效果？例如：品牌認知提升/直接帶貨/粉絲增長/話題擴散等",
+
+  "企劃師應用建議": {{
+    "本週可用選題": "根據這支影片，企劃師本週可以發展的1個具體選題方向（含標題公式）",
+    "可套用的開場白公式": "把這支影片的開場白抽象成可填空的公式，例如：[痛點]+[意外轉折]+[懸念]",
+    "適合哪類客戶": "好創目前服務的哪類客戶最適合借鑑這支影片？為什麼？",
+    "改編建議": "如果要為台灣本土品牌改編這支影片，最需要調整的3個地方是什麼？"
+  }},
+
+  "剪輯師應用建議": {{
+    "前3秒剪輯指令": "具體說明前3秒要怎麼剪：鏡頭切換方式、字幕出現時機、音效使用",
+    "節奏時間軸": "用時間點描述整支影片的剪輯節奏，例如：0-3秒快切3個鏡頭→3-15秒平穩敘事→15-25秒衝突高潮→25秒後CTA",
+    "視覺錘強調方式": "剪輯時如何強調這支影片的視覺錘？用什麼特效或字幕設計？",
+    "音效與音樂建議": "這支影片的音效節奏如何配合剪輯？哪些時間點需要特別的音效強調？"
+  }},
+
   "熱門音樂": "音樂風格、情緒功能、為什麼選這首（若無法判斷填：需人工補充）",
   
   "類別標籤": ["從以下選項中選擇最符合的（可多選，必須從此清單選擇）：美妝保養、餐飲食品、服飾配件、保健醫療、數位課程、服務業、家居家具、婚禮攝影、3C電子、通用"],
@@ -157,6 +182,37 @@ def detect_platform(url: str) -> str:
     return "其他"
 
 
+def fetch_video_metadata(url: str) -> dict:
+    """
+    用 yt-dlp --dump-json 取得影片 metadata（不下載）
+    回傳 {title, description, view_count, uploader, duration}
+    """
+    cmd = [
+        "yt-dlp",
+        "--dump-json",
+        "--no-playlist",
+        "--no-warnings",
+        "--ignore-errors",
+        url
+    ]
+    result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
+    if result.returncode == 0 and result.stdout.strip():
+        try:
+            info = json.loads(result.stdout.strip().split("\n")[0])
+            return {
+                "title": info.get("title", ""),
+                "description": info.get("description", ""),
+                "view_count": info.get("view_count", 0),
+                "like_count": info.get("like_count", 0),
+                "uploader": info.get("uploader", ""),
+                "duration": info.get("duration", 0),
+                "upload_date": info.get("upload_date", ""),
+            }
+        except Exception:
+            pass
+    return {}
+
+
 def download_video(url: str, output_dir: str) -> str:
     """用 yt-dlp 下載影片音頻，回傳本地檔案路徑"""
     output_template = os.path.join(output_dir, "%(id)s.%(ext)s")
@@ -170,7 +226,11 @@ def download_video(url: str, output_dir: str) -> str:
     ]
     result = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
     if result.returncode != 0:
-        raise RuntimeError(f"yt-dlp 失敗：{result.stderr[:300]}")
+        err = result.stderr[:300]
+        # IP 封鎖或 403 時拋出特定錯誤，讓上層降級處理
+        if "blocked" in err.lower() or "403" in err or "forbidden" in err.lower():
+            raise RuntimeError(f"IP_BLOCKED:{err}")
+        raise RuntimeError(f"yt-dlp 失敗：{err}")
 
     files = sorted(Path(output_dir).glob("*"), key=lambda f: f.stat().st_mtime)
     if not files:
@@ -179,18 +239,17 @@ def download_video(url: str, output_dir: str) -> str:
 
 
 def transcribe_audio(audio_path: str) -> str:
-    """用 Whisper API 轉錄音頻（直接呼叫 OpenAI 原始 API）"""
-    client = OpenAI(
-        api_key=WHISPER_API_KEY,
-        base_url="https://api.openai.com/v1"
+    """用 manus-speech-to-text 轉錄音頻（沙盒內建工具，不需要 OpenAI Key）"""
+    result = subprocess.run(
+        ["manus-speech-to-text", audio_path],
+        capture_output=True, text=True, timeout=180
     )
-    with open(audio_path, "rb") as f:
-        result = client.audio.transcriptions.create(
-            model="whisper-1",
-            file=f,
-            language="zh"
-        )
-    return result.text
+    if result.returncode != 0:
+        raise RuntimeError(f"manus-speech-to-text 失敗：{result.stderr.strip()}")
+    output = result.stdout.strip()
+    if not output:
+        raise RuntimeError("manus-speech-to-text 回傳空白逐字稿")
+    return output
 
 
 def analyze_with_gpt4o(transcript: str, platform: str, url: str) -> dict:
@@ -216,8 +275,9 @@ def analyze_with_gpt4o(transcript: str, platform: str, url: str) -> dict:
 
 def check_duplicate_via_mcp(url: str) -> bool:
     """透過 Notion MCP 查詢是否已有此連結"""
+    import re as _re
     cmd = [
-        "manus-mcp-cli", "tool", "call", "notion-query-database",
+        "manus-mcp-cli", "tool", "call", "notion-query-data-sources",
         "--server", "notion",
         "--input", json.dumps({
             "data_source_id": NOTION_DB_ID,
@@ -231,8 +291,12 @@ def check_duplicate_via_mcp(url: str) -> bool:
     if result.returncode != 0:
         return False
     try:
-        data = json.loads(result.stdout.split("Tool execution result:\n")[-1])
-        return len(data.get("results", [])) > 0
+        raw = result.stdout.strip()
+        raw = _re.sub(r'\x1b\[[0-9;]*m', '', raw)
+        if "Tool execution result:" in raw:
+            raw = raw.split("Tool execution result:")[-1].strip()
+        data = json.loads(raw)
+        return len(data.get("results", data.get("pages", []))) > 0
     except Exception:
         return False
 
@@ -323,7 +387,39 @@ def write_to_notion_via_mcp(url: str, platform: str, transcript: str, analysis: 
     industry = analysis.get('產業適用性分析', {})
     invalid = analysis.get('無效因素識別', [])
 
+    # 企劃師應用建議
+    planner_tips = analysis.get('企劃師應用建議', {})
+    planner_topic = planner_tips.get('本週可用選題', '待補充') if isinstance(planner_tips, dict) else '待補充'
+    planner_formula = planner_tips.get('可套用的開場白公式', '待補充') if isinstance(planner_tips, dict) else '待補充'
+    planner_client = planner_tips.get('適合哪類客戶', '待補充') if isinstance(planner_tips, dict) else '待補充'
+    # 剪輯師應用建議
+    editor_tips = analysis.get('剪輯師應用建議', {})
+    editor_cut = editor_tips.get('前3秒剪輯指令', '待補充') if isinstance(editor_tips, dict) else '待補充'
+    editor_timeline = editor_tips.get('節奏時間軸', '待補充') if isinstance(editor_tips, dict) else '待補充'
+    editor_visual = editor_tips.get('視覺錘強調方式', '待補充') if isinstance(editor_tips, dict) else '待補充'
+    editor_audio = editor_tips.get('音效與音樂建議', '待補充') if isinstance(editor_tips, dict) else '待補充'
+    # 爆款三層分析
+    why_viral = analysis.get('為什麼會爆款', '待補充')
+    why_good = analysis.get('為什麼是好影片', '待補充')
+    effect = analysis.get('能達到什麼效果', '待補充')
+    video_type_val = analysis.get('影片類型', '未分類')
+
     content = (
+        f"## 📋 企劃師速查區\n\n"
+        f"> 影片類型：{video_type_val}\n\n"
+        f"**🔥 為什麼會爆款？**\n{why_viral}\n\n"
+        f"**🎯 能達到什麼效果？**\n{effect}\n\n"
+        f"**✅ 本週可用選題：**\n{planner_topic}\n\n"
+        f"**📝 可套用開場白公式：**\n{planner_formula}\n\n"
+        f"**🎯 適合哪類客戶：**\n{planner_client}\n\n"
+        f"---\n\n"
+        f"## 🎬 剪輯師速查區\n\n"
+        f"**🌟 為什麼是好影片？**\n{why_good}\n\n"
+        f"**⏱️ 前3秒剪輯指令：**\n{editor_cut}\n\n"
+        f"**📊 節奏時間軸：**\n{editor_timeline}\n\n"
+        f"**🔨 視覺錘強調方式：**\n{editor_visual}\n\n"
+        f"**🎵 音效與音樂建議：**\n{editor_audio}\n\n"
+        f"---\n\n"
         f"## 🎣 鉤子類型與設計\n\n{fmt(hook)}\n\n"
         f"## 🔨 視覺錘 × 語言釘\n\n{fmt(visual_hammer)}\n\n"
         f"## 🎭 人設定位分析\n\n{fmt(persona)}\n\n"
@@ -351,7 +447,11 @@ def write_to_notion_via_mcp(url: str, platform: str, transcript: str, analysis: 
                     "熱門音樂": analysis.get("熱門音樂", "需人工補充"),
                     "是否已借鏡": "__NO__",
                     "類別標籤": tags_json,
-                    "來源類型": "Meta廣告" if "facebook.com/ads" in url or "meta" in url.lower() else "有機熱門",
+                    "來源類型": "Meta廣告（🌍英國）" if "facebook.com/ads" in url or "meta" in url.lower() or "MOCK_" in url else "有機熱門",
+                    "影片類型": video_type_val,
+                    "本週可用選題": planner_topic[:200] if planner_topic else "",
+                    "可套用開場白公式": planner_formula[:200] if planner_formula else "",
+                    "適合哪類客戶": planner_client[:200] if planner_client else "",
                     **({"鉤子大類": hook_type} if hook_type else {}),
                     **({"視覺錘類型": visual_hammer_type} if visual_hammer_type else {}),
                     **({"CTA類型": cta_type} if cta_type else {}),
@@ -370,7 +470,11 @@ def write_to_notion_via_mcp(url: str, platform: str, transcript: str, analysis: 
     result = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
 
     if result.returncode != 0:
-        raise RuntimeError(f"Notion 寫入失敗：{result.stderr[:200]}")
+        err_msg = result.stderr[:300]
+        # Notion MCP 未啟用時，降級存本地 JSON
+        if "not found" in err_msg or "server" in err_msg.lower():
+            return _save_to_local_queue(payload, url)
+        raise RuntimeError(f"Notion 寫入失敗：{err_msg}")
 
     # 嘗試解析回傳的頁面 URL
     try:
@@ -380,6 +484,36 @@ def write_to_notion_via_mcp(url: str, platform: str, transcript: str, analysis: 
         return pages[0].get("url", "https://notion.so") if pages else "https://notion.so"
     except Exception:
         return "https://notion.so"
+
+
+def _save_to_local_queue(payload: dict, url: str) -> str:
+    """
+    Notion MCP 未啟用時，將拆解結果存到本地 JSON 佇列
+    路徑：/home/ubuntu/viral_factory/data/notion_queue.json
+    """
+    queue_file = Path("/home/ubuntu/viral_factory/data/notion_queue.json")
+    queue_file.parent.mkdir(parents=True, exist_ok=True)
+
+    queue = []
+    if queue_file.exists():
+        try:
+            with open(queue_file, "r", encoding="utf-8") as f:
+                queue = json.load(f)
+        except Exception:
+            queue = []
+
+    entry = {
+        "url": url,
+        "queued_at": datetime.now().isoformat(),
+        "payload": payload
+    }
+    queue.append(entry)
+
+    with open(queue_file, "w", encoding="utf-8") as f:
+        json.dump(queue, f, ensure_ascii=False, indent=2)
+
+    print(f"  ⚠️  Notion MCP 未啟用，已存入本地佇列（{len(queue)} 筆）")
+    return f"local://notion_queue/{len(queue)}"
 
 
 def send_slack_dm(message: str, channel: str = None):
@@ -419,22 +553,49 @@ def process_single_video(url: str, whisper_available: bool = True) -> dict:
             return {"success": False, "error": "duplicate", "url": url}
 
         with tempfile.TemporaryDirectory() as tmpdir:
-            # Step 1: 下載
+            # Step 1: 下載（失敗時自動降級為無音頻模式）
             print(f"  [1/5] 下載影片...")
-            audio_path = download_video(url, tmpdir)
-            size_kb = Path(audio_path).stat().st_size / 1024
-            print(f"  下載完成：{Path(audio_path).name}（{size_kb:.0f} KB）")
+            audio_path = None
+            ip_blocked = False
+            try:
+                audio_path = download_video(url, tmpdir)
+                size_kb = Path(audio_path).stat().st_size / 1024
+                print(f"  下載完成：{Path(audio_path).name}（{size_kb:.0f} KB）")
+            except RuntimeError as e:
+                if "IP_BLOCKED" in str(e) or "403" in str(e) or "blocked" in str(e).lower():
+                    ip_blocked = True
+                    print(f"  ⚠️  IP 被封鎖，自動降級為無音頻模式")
+                else:
+                    raise  # 其他錯誤正常拋出
 
-            # Step 2: 轉文字
-            if whisper_available:
+            # Step 2: 轉文字（或用 metadata 代替）
+            if ip_blocked or audio_path is None:
+                # 降級：用 yt-dlp metadata 取得影片標題和描述
+                print(f"  [2/5] 無音頻模式：抓取影片 metadata...")
+                meta = fetch_video_metadata(url)
+                title_text = meta.get("title", "")
+                desc_text = meta.get("description", "")
+                view_count = meta.get("view_count", 0)
+                uploader = meta.get("uploader", "")
+                # 用 metadata 組合成「逆字稿代替」
+                transcript = (
+                    f"⚠️ 無法下載音頻（IP 被封鎖），以文字資訊進行拆解\n\n"
+                    f"影片標題：{title_text}\n"
+                    f"影片描述：{desc_text}\n"
+                    f"作者：{uploader}\n"
+                    f"觀看數：{view_count:,}\n"
+                    f"來源連結：{url}"
+                )
+                print(f"  metadata 抓取完成：{title_text[:40]}")
+            elif not whisper_available:
+                transcript = "（Whisper API 額度不足，逐字稿待補充）"
+                print(f"  [2/5] 跳過轉錄（API 額度不足）")
+            else:
                 print(f"  [2/5] Whisper 語音轉文字...")
                 transcript = transcribe_audio(audio_path)
                 if not transcript.strip():
                     transcript = "（無語音內容，純視覺影片）"
                 print(f"  轉錄完成：{len(transcript)} 字")
-            else:
-                transcript = "（Whisper API 額度不足，逐字稿待補充）"
-                print(f"  [2/5] 跳過轉錄（API 額度不足）")
 
             # Step 3: AI 拆解
             print(f"  [3/5] GPT 拆解分析...")
@@ -446,20 +607,63 @@ def process_single_video(url: str, whisper_available: bool = True) -> dict:
             notion_url = write_to_notion_via_mcp(url, platform, transcript, analysis)
             print(f"  寫入完成：{notion_url}")
 
-            # Step 5: Slack 通知
-            print(f"  [5/5] Slack 通知阿韋...")
+            # Step 5: Slack 分角色通知
+            print(f"  [5/5] Slack 分角色通知（小鑫企劃版 + 阿韋剪輯版）...")
             today = datetime.now().strftime("%Y-%m-%d")
-            msg = (
-                f"🔥 *爆款入庫* | {today}\n\n"
-                f"*平台：* {platform}\n"
-                f"*標題：* {analysis.get('影片標題或主題', '未命名')}\n"
-                f"*鉤子類型：* {analysis.get('鉤子類型與設計', {}).get('鉤子類型', '') if isinstance(analysis.get('鉤子類型與設計'), dict) else ''}\n"
-                f"*可套用公式：* {analysis.get('鉤子類型與設計', {}).get('可套用公式', '') if isinstance(analysis.get('鉤子類型與設計'), dict) else ''}\n"
-                f"*廣告潛力：* {analysis.get('廣告投放潛力評估', {}).get('適合投廣告嗎', '') if isinstance(analysis.get('廣告投放潛力評估'), dict) else ''}\n"
-                f"*Notion：* {notion_url}"
+            title = analysis.get('影片標題或主題', '未命名')
+            video_type = analysis.get('影片類型', '')
+            score_label = analysis.get('score_label', '')
+            why_viral = analysis.get('為什麼會爆款', '')
+            effect = analysis.get('能達到什麼效果', '')
+
+            # 企劃師版通知（小鑫）
+            planner_tips = analysis.get('企劃師應用建議', {})
+            topic = planner_tips.get('本週可用選題', '') if isinstance(planner_tips, dict) else ''
+            formula = planner_tips.get('可套用的開場白公式', '') if isinstance(planner_tips, dict) else ''
+            client_fit = planner_tips.get('適合哪類客戶', '') if isinstance(planner_tips, dict) else ''
+
+            # 判斷是否為 Meta 國外廣告
+            is_meta_foreign = "facebook.com/ads" in url or "meta" in url.lower() or "MOCK_" in url
+            foreign_tag = "\n> 🌍 此為國外廣告（英國市場），用於學習創意手法，不代表台灣市場現況" if is_meta_foreign else ""
+
+            msg_planner = (
+                f"💡 *今日爆款入庫（企劃版）* | {today}\n"
+                f"<@{SLACK_XINXIN_ID}> 新素材入庫，請查收\n"
+                f"影片類型：{video_type} | 平台：{platform}{foreign_tag}\n"
+                f"*標題：* {title}\n\n"
+                f"🔥 *為什麼會爆款？*\n{why_viral}\n\n"
+                f"🎯 *能達到什麼效果？*\n{effect}\n\n"
+                f"✅ *本週可用選題：*\n{topic}\n\n"
+                f"📝 *可套用開場白公式：*\n{formula}\n\n"
+                f"🎯 *適合哪類客戶：*\n{client_fit}\n\n"
+                f"📚 完整拆解分析 → {notion_url}"
             )
-            send_slack_dm(msg)
-            print(f"  通知已發送")
+
+            # 剪輯師版通知（阿韋）
+            editor_tips = analysis.get('剪輯師應用建議', {})
+            cut_cmd = editor_tips.get('前3秒剪輯指令', '') if isinstance(editor_tips, dict) else ''
+            timeline = editor_tips.get('節奏時間軸', '') if isinstance(editor_tips, dict) else ''
+            visual_tip = editor_tips.get('視覺錘強調方式', '') if isinstance(editor_tips, dict) else ''
+            audio_tip = editor_tips.get('音效與音樂建議', '') if isinstance(editor_tips, dict) else ''
+            why_good = analysis.get('為什麼是好影片', '')
+
+            msg_editor = (
+                f"🎬 *今日爆款入庫（剪輯版）* | {today}\n"
+                f"<@{SLACK_AWEI_ID}> 新素材入庫，請查收\n"
+                f"影片類型：{video_type} | 平台：{platform}{foreign_tag}\n"
+                f"*標題：* {title}\n\n"
+                f"🌟 *為什麼是好影片？*\n{why_good}\n\n"
+                f"⏱️ *前3秒剪輯指令：*\n{cut_cmd}\n\n"
+                f"📊 *節奏時間軸：*\n{timeline}\n\n"
+                f"🔨 *視覺錘強調方式：*\n{visual_tip}\n\n"
+                f"🎵 *音效與音樂建議：*\n{audio_tip}\n\n"
+                f"📚 完整拆解分析 → {notion_url}"
+            )
+
+            # 發送兩則分角色通知
+            send_slack_dm(msg_planner, channel=SLACK_AUTO_CH)   # 小鑫企劃版 → #自動化訊息來源
+            send_slack_dm(msg_editor, channel=SLACK_AUTO_CH)    # 阿韋剪輯版 → #自動化訊息來源
+            print(f"  通知已發送（企劃版 + 剪輯版）")
 
             print(f"\n  ✅ 完成！")
             return {
@@ -468,6 +672,8 @@ def process_single_video(url: str, whisper_available: bool = True) -> dict:
                 "title": analysis.get("影片標題或主題", ""),
                 "platform": platform,
                 "url": url,
+                "video_type": analysis.get("影片類型", ""),
+                "score": analysis.get("score", 0),
                 "analysis": analysis
             }
 
@@ -493,13 +699,47 @@ def process_batch(urls: list, whisper_available: bool = True) -> list:
     fail_count = len(results) - len(success_items)
     today = datetime.now().strftime("%Y-%m-%d")
 
-    lines = [f"📊 *爆款入庫日報* | {today}\n"]
-    lines.append(f"今日入庫：*{len(success_items)} 支* | 失敗/跳過：{fail_count} 支\n")
-    for i, r in enumerate(success_items, 1):
-        lines.append(f"{i}. [{r.get('platform','')}] {r.get('title','')}")
-        lines.append(f"   → {r.get('notion_url','')}")
+    # 統計影片類型分佈與評分分佈
+    type_count = {}
+    score_dist = {1: 0, 2: 0, 3: 0, 4: 0, 5: 0}
+    for r in success_items:
+        vtype = r.get('video_type', r.get('analysis', {}).get('影片類型', '未分類'))
+        type_count[vtype] = type_count.get(vtype, 0) + 1
+        score = r.get('score', 0)
+        if isinstance(score, int) and score in score_dist:
+            score_dist[score] += 1
 
-    send_slack_dm("\n".join(lines))
+    type_summary = ' | '.join([f"{k}:{v}支" for k, v in type_count.items()]) or '無分類資料'
+    score_summary = ' '.join([f"{s}分:{n}支" for s, n in score_dist.items() if n > 0]) or '無評分資料'
+
+    # 主頻道日報（小鑫 + 阿韋）
+    lines = [f"📊 *今日爆款入庫日報* | {today}\n"]
+    lines.append(f"<@{SLACK_XINXIN_ID}> <@{SLACK_AWEI_ID}> 今日入庫完成\n")
+    lines.append(f"入庫：*{len(success_items)} 支* | 失敗/跳過：{fail_count} 支")
+    lines.append(f"影片類型：{type_summary}")
+    lines.append(f"評分分佈：{score_summary}\n")
+    for i, r in enumerate(success_items, 1):
+        vtype = r.get('video_type', '')
+        score = r.get('score', '-')
+        lines.append(f"{i}. [{r.get('platform','')}][{vtype}] {r.get('title','')} ★{score}")
+        lines.append(f"   → {r.get('notion_url','')}")
+    send_slack_dm("\n".join(lines), channel=SLACK_AUTO_CH)
+
+    # 子權健康版 DM
+    SLACK_DENNIS_ID = os.environ.get('SLACK_DENNIS_ID', 'U07MHPJKQ8V')
+    fail_rate = fail_count / (len(results) or 1) * 100
+    health_lines = [
+        f"🛡️ *系統健康摘要* | {today}",
+        f"執行結果：成功 {len(success_items)} 支 | 失敗 {fail_count} 支 | 失敗率 {fail_rate:.0f}%",
+        f"影片類型分佈：{type_summary}",
+        f"評分分佈：{score_summary}",
+    ]
+    if fail_count > 0:
+        fail_urls = [r.get('url', '') for r in results if not r.get('success') and r.get('error') != 'duplicate']
+        if fail_urls:
+            health_lines.append(f"失敗影片：{', '.join(fail_urls[:2])}")
+    health_lines.append(f"庫房狀態：請至 Notion 02爆款拆解庫查看")
+    send_slack_dm("\n".join(health_lines), channel=SLACK_DENNIS_ID)
 
     print(f"\n{'='*55}")
     print(f"✅ 完成：{len(success_items)} 支 | ❌ 失敗：{fail_count} 支")

@@ -1,0 +1,33 @@
+【爆款短影音拆解工廠 v3.0｜每日自動執行 + 週一手冊週更】
+
+執行前準備（每次必做）：
+1. 安裝依賴：sudo pip3 install yt-dlp openai notion-client -q
+2. 拉取最新腳本：cd /home/ubuntu && git clone https://github.com/jayw19911125-sys/viral-factory.git viral_factory 2>/dev/null || (cd /home/ubuntu/viral_factory && git pull origin main)
+3. 載入環境變數：source /home/ubuntu/.user_env
+
+執行主任務：
+python3 /home/ubuntu/viral_factory/daily_run.py
+
+週一額外任務（手冊自動週更，在 daily_run.py 執行完畢後執行）：
+執行以下 Python 判斷，若今天是週一（weekday==0），則執行手冊週更腳本：
+python3 -c "import datetime; d=datetime.datetime.now(); exit(0 if d.weekday()==0 else 1)" && python3 /home/ubuntu/viral_factory/weekly_manual_updater.py || echo "今日非週一，跳過手冊週更"
+
+任務說明（v3.0）：
+每日任務（週一至週五 09:00）：
+- 雙來源系統：TikTok/Reels 有機熱門 5 支 + Meta 廣告按產業輪流
+- GPT-4.1-mini 深度拆解：12 欄位 + 6 結構化標籤
+- 寫入 Notion 02｜爆款拆解庫（ID：82097a06-fae5-83bd-a8c3-87236d3713aa）
+- 評分系統（1-5分）+ 自動判斷 IP型/導購型
+- 素材自動分配：03 開頭鉤子庫 / 04 結尾呼籲庫 / 05 腳本結構庫 / 06 視覺錘庫 / 07 語言釘庫
+- 高分（4-5分）自動寫入 35｜已驗證熱門腳本庫（IP型/導購型分庫）
+- Slack DM 通知阿韋
+- 每週五執行完畢後，額外執行週報分析（python3 /home/ubuntu/viral_factory/weekly_report.py），發送至 Slack #all-團隊主頻道（C0AQG307XJT）
+
+週一額外任務（手冊自動週更）：
+- 統計上週各庫房新增素材數量（02~07、35庫）
+- 統計上週評分分佈（1-5分）
+- GPT-4.1-mini 生成本週系統動態摘要
+- 更新 viral_factory_v3_manual.md（版本日期 + 本週統計）
+- 重新生成 PDF 並上傳 S3 取得公開連結
+- 發送 Slack 通知至 #all-團隊主頻道（C0AQG307XJT）含 PDF 下載連結
+- 發送 Slack DM 給子權（U07MHPJKQ8V）含系統健康摘要

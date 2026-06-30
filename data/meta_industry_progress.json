@@ -1,0 +1,225 @@
+{
+  "round": 1,
+  "current_industry_index": 8,
+  "industries": [
+    "美容保養",
+    "彩妝美髮",
+    "醫美診所",
+    "健身減重",
+    "保健食品",
+    "中醫診所",
+    "牙科診所",
+    "餐飲食品",
+    "烘焙甜點",
+    "機能飲品",
+    "服飾配件",
+    "家具家居",
+    "寵物",
+    "線上課程",
+    "語言學習",
+    "親子教育",
+    "職涯發展",
+    "投資理財",
+    "保險金融",
+    "3C電子",
+    "軟體服務",
+    "AI工具",
+    "旅遊住宿",
+    "娛樂展演",
+    "房地產",
+    "汽機車",
+    "婚禮婚慶",
+    "電商零售"
+  ],
+  "industry_stats": {
+    "美容保養": {
+      "round1": 5,
+      "round2": 0,
+      "processed_ids": [
+        "mock_面膜_000",
+        "mock_護膚_000",
+        "mock_精華_000",
+        "mock_保養_000",
+        "mock_美容_000"
+      ]
+    },
+    "彩妝美髮": {
+      "round1": 5,
+      "round2": 0,
+      "processed_ids": [
+        "mock_染髮_000",
+        "mock_口紅_000",
+        "mock_睫毛_000",
+        "mock_美甲_000",
+        "mock_彩妝_000"
+      ]
+    },
+    "醫美診所": {
+      "round1": 5,
+      "round2": 0,
+      "processed_ids": [
+        "mock_微整_000",
+        "mock_縮毛孔_000",
+        "mock_醫美_000",
+        "mock_玻尿酸_000",
+        "mock_雷射_000"
+      ]
+    },
+    "健身減重": {
+      "round1": 5,
+      "round2": 0,
+      "processed_ids": [
+        "mock_運動_000",
+        "mock_瘦身_000",
+        "mock_增肌_000",
+        "mock_減脂_000",
+        "mock_健身_000"
+      ]
+    },
+    "保健食品": {
+      "round1": 5,
+      "round2": 0,
+      "processed_ids": [
+        "mock_維他命_000",
+        "mock_保健_000",
+        "mock_益生菌_000",
+        "mock_補充品_000",
+        "mock_膠原蛋白_000"
+      ]
+    },
+    "中醫診所": {
+      "round1": 5,
+      "round2": 0,
+      "processed_ids": [
+        "mock_中醫_000",
+        "mock_調理_000",
+        "mock_漢方_000",
+        "mock_體質_000",
+        "mock_針灸_000"
+      ]
+    },
+    "牙科診所": {
+      "round1": 5,
+      "round2": 0,
+      "processed_ids": [
+        "mock_矯正_000",
+        "mock_牙科_000",
+        "mock_牙齒美白_000",
+        "mock_洗牙_000",
+        "mock_植牙_000"
+      ]
+    },
+    "餐飲食品": {
+      "round1": 5,
+      "round2": 0,
+      "processed_ids": [
+        "mock_food delivery_000",
+        "mock_restaurant_000",
+        "mock_healthy food_000",
+        "mock_meal kit_000",
+        "mock_takeaway_000"
+      ]
+    },
+    "烘焙甜點": {
+      "round1": 0,
+      "round2": 0,
+      "processed_ids": []
+    },
+    "機能飲品": {
+      "round1": 0,
+      "round2": 0,
+      "processed_ids": []
+    },
+    "服飾配件": {
+      "round1": 0,
+      "round2": 0,
+      "processed_ids": []
+    },
+    "家具家居": {
+      "round1": 0,
+      "round2": 0,
+      "processed_ids": []
+    },
+    "寵物": {
+      "round1": 0,
+      "round2": 0,
+      "processed_ids": []
+    },
+    "線上課程": {
+      "round1": 0,
+      "round2": 0,
+      "processed_ids": []
+    },
+    "語言學習": {
+      "round1": 0,
+      "round2": 0,
+      "processed_ids": []
+    },
+    "親子教育": {
+      "round1": 0,
+      "round2": 0,
+      "processed_ids": []
+    },
+    "職涯發展": {
+      "round1": 0,
+      "round2": 0,
+      "processed_ids": []
+    },
+    "投資理財": {
+      "round1": 0,
+      "round2": 0,
+      "processed_ids": []
+    },
+    "保險金融": {
+      "round1": 0,
+      "round2": 0,
+      "processed_ids": []
+    },
+    "3C電子": {
+      "round1": 0,
+      "round2": 0,
+      "processed_ids": []
+    },
+    "軟體服務": {
+      "round1": 0,
+      "round2": 0,
+      "processed_ids": []
+    },
+    "AI工具": {
+      "round1": 0,
+      "round2": 0,
+      "processed_ids": []
+    },
+    "旅遊住宿": {
+      "round1": 0,
+      "round2": 0,
+      "processed_ids": []
+    },
+    "娛樂展演": {
+      "round1": 0,
+      "round2": 0,
+      "processed_ids": []
+    },
+    "房地產": {
+      "round1": 0,
+      "round2": 0,
+      "processed_ids": []
+    },
+    "汽機車": {
+      "round1": 0,
+      "round2": 0,
+      "processed_ids": []
+    },
+    "婚禮婚慶": {
+      "round1": 0,
+      "round2": 0,
+      "processed_ids": []
+    },
+    "電商零售": {
+      "round1": 0,
+      "round2": 0,
+      "processed_ids": []
+    }
+  },
+  "updated_at": "2026-06-30T01:10:54.742864"
+}

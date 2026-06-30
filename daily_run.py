@@ -38,6 +38,7 @@ from viral_factory import process_batch
 from weekly_report import run_weekly_report
 from meta_ads_fetcher import get_meta_ad_urls_simple
 from script_distributor import distribute_video
+from manual_version_tracker import auto_detect_and_update
 
 # ─── 日誌設定 ─────────────────────────────────────────────
 LOG_DIR = Path("/home/ubuntu/viral_factory/logs")
@@ -78,11 +79,16 @@ def main():
         organic_urls = get_daily_urls()
         logger.info(f"有機內容：{len(organic_urls)} 支")
 
-        # Step 1-B：取得 Meta 廣告素材 URL（按產業輪流）
-        logger.info("\n[Step 1-B] 抓取 Meta 廣告高成效素材（按產業輪流）...")
+        # Step 1-B：取得 Meta 廣告素材（按產業輪流，英國市場）
+        logger.info("\n[Step 1-B] 抓取 Meta 廣告高成效素材（英國市場，按產業輪流）...")
+        meta_items = []   # list of dict: {url, country_label, source_note, ...}
         try:
-            meta_urls = get_meta_ad_urls_simple()
-            logger.info(f"Meta 廣告：{len(meta_urls)} 支")
+            meta_items = get_meta_ad_urls_simple()  # 回傳字典清單
+            meta_urls = [item["url"] for item in meta_items if not item.get("is_mock", False)]
+            meta_mock_count = sum(1 for item in meta_items if item.get("is_mock", False))
+            logger.info(f"Meta 廣告：{len(meta_urls)} 支真實 + {meta_mock_count} 支模擬（已略過）")
+            if meta_urls:
+                logger.info(f"  標註：🌍 國外廣告（英國）")
         except Exception as e:
             logger.warning(f"Meta 廣告抓取失敗（不影響有機內容）：{e}")
             meta_urls = []
@@ -96,7 +102,7 @@ def main():
 
         logger.info(
             f"\n今日待拆合計：{len(urls)} 支"
-            f"（有機 {len(organic_urls)} + Meta廣告 {len(meta_urls)}）"
+            f"（有機 {len(organic_urls)} + Meta廣告英國 {len(meta_urls)}）"
         )
 
         # Step 2：批次拆解（雙來源合併處理）
@@ -162,7 +168,7 @@ def main():
         logger.info(f"任務完成 | 耗時 {elapsed}s")
         logger.info(f"拆解：成功 {len(success_results)} 支 | 失敗/跳過 {len(failed_results)} 支")
         logger.info(f"  有機內容：{sum(1 for r in success_results if r.get('url','') in organic_urls)} 支")
-        logger.info(f"  Meta廣告：{sum(1 for r in success_results if r.get('url','') in meta_urls)} 支")
+        logger.info(f"  Meta廣告（英國）：{sum(1 for r in success_results if r.get('url','') in meta_urls)} 支")
         logger.info(f"評分分佈：{score_summary}")
         logger.info(f"類型分佈：{type_summary}")
         logger.info(f"高分入庫（35庫）：{high_score_count} 支")
@@ -173,6 +179,27 @@ def main():
             logger.info("\n[週五任務] 開始執行爆款規律週報分析...")
             run_weekly_report()
             logger.info("週報分析完成，已發送至 Slack 團隊主頻道")
+
+        # ─── 手冊版本自動更新 ─────────────────────────────────
+        # 每次拆解完成後自動偵測：
+        #   - 若腳本有變動 → bump minor（功能更新）並發 Slack 通知
+        #   - 若只有資料更新 → bump patch（靜默更新，不發通知）
+        logger.info("\n[手冊更新] 自動偵測版本變動...")
+        try:
+            patch_changes = [
+                f"今日拆解：成功 {len(success_results)} 支（有機 + Meta廣告）",
+                f"評分分佈：{score_summary}",
+                f"高分入庫（35庫）：{high_score_count} 支"
+            ]
+            new_version = auto_detect_and_update(
+                reason="每日拆解資料更新",
+                changes=patch_changes,
+                notify_slack=True  # minor 版才會發通知，patch 靜默
+            )
+            logger.info(f"手冊已更新至 v{new_version}")
+        except Exception as e:
+            logger.warning(f"手冊版本更新失敗（不影響主流程）：{e}")
+        # ─────────────────────────────────────────────────────
 
     except Exception as e:
         logger.error(f"排程執行失敗：{e}", exc_info=True)

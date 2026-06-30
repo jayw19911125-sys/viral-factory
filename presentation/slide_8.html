@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;800&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Space Grotesk', sans-serif; }
+        .slide-container { 
+            width: 1280px; 
+            min-height: 720px; 
+            background-color: #F8F9FA; 
+            position: relative;
+            padding-top: 50px;
+            overflow: hidden;
+        }
+        
+        .slide-container::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-image: 
+                linear-gradient(to right, rgba(33, 37, 41, 0.05) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(33, 37, 41, 0.05) 1px, transparent 1px);
+            background-size: 40px 40px;
+            z-index: 0;
+        }
+
+        .header {
+            position: relative;
+            z-index: 1;
+            margin: 0 60px 30px;
+            border-bottom: 4px solid #212529;
+        }
+
+        .page-title {
+            color: #212529;
+            font-size: 32px;
+            font-weight: 800;
+            margin-bottom: 16px;
+        }
+
+        .page-title span { color: #F72585; }
+
+        .content-grid {
+            position: relative;
+            z-index: 1;
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 16px;
+            margin: 0 60px;
+        }
+
+        .db-card {
+            background: white;
+            border: 1px solid #212529;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 4px 4px 0px #4361EE;
+        }
+
+        /* Top row: 3 cards, each spans 2 columns */
+        .db-card:nth-child(1), .db-card:nth-child(2), .db-card:nth-child(3) {
+            grid-column: span 2;
+        }
+
+        /* Bottom row: 2 cards, centered. Each spans 3 columns */
+        .db-card:nth-child(4) { grid-column: 1 / 4; }
+        .db-card:nth-child(5) { grid-column: 4 / 7; }
+
+        .card-header {
+            padding: 16px;
+            background: #212529;
+            color: white;
+            border-bottom: 1px solid #212529;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .db-number {
+            font-size: 24px;
+            font-weight: 800;
+            color: #4361EE;
+        }
+
+        .db-title {
+            font-size: 20px;
+            font-weight: 800;
+        }
+
+        .card-body {
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            flex: 1;
+        }
+
+        .info-block {
+            padding: 16px;
+            border-bottom: 1px solid #212529;
+            flex: 1;
+        }
+
+        .info-block:last-child {
+            border-bottom: none;
+            background: rgba(67, 97, 238, 0.05);
+        }
+
+        .info-label {
+            font-size: 14px;
+            font-weight: 800;
+            color: #4361EE;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .info-content {
+            font-size: 16px;
+            color: #212529;
+            line-height: 1.4;
+        }
+
+        .info-content.highlight {
+            font-weight: 800;
+        }
+
+    </style>
+</head>
+<body>
+    <div class="slide-container">
+        <div class="header">
+            <h2 class="page-title"><span>07 /</span> 素材不是存著看的，是用來創作的 (2/2)</h2>
+        </div>
+
+        <div class="content-grid">
+            <!-- 03 -->
+            <div class="db-card">
+                <div class="card-header">
+                    <div class="db-number">03</div>
+                    <div class="db-title">開頭鉤子庫</div>
+                </div>
+                <div class="card-body">
+                    <div class="info-block">
+                        <div class="info-label"><i class="fas fa-box"></i> 存什麼</div>
+                        <div class="info-content highlight">鉤子公式（6 大類）</div>
+                    </div>
+                    <div class="info-block">
+                        <div class="info-label"><i class="fas fa-user"></i> 誰最常用</div>
+                        <div class="info-content">阿韋、企劃</div>
+                    </div>
+                    <div class="info-block">
+                        <div class="info-label"><i class="fas fa-lightbulb"></i> 什麼時候用</div>
+                        <div class="info-content">想不到開頭，需要抓住觀眾注意力時</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 04 -->
+            <div class="db-card">
+                <div class="card-header">
+                    <div class="db-number">04</div>
+                    <div class="db-title">結尾呼籲庫</div>
+                </div>
+                <div class="card-body">
+                    <div class="info-block">
+                        <div class="info-label"><i class="fas fa-box"></i> 存什麼</div>
+                        <div class="info-content highlight">CTA 公式</div>
+                    </div>
+                    <div class="info-block">
+                        <div class="info-label"><i class="fas fa-user"></i> 誰最常用</div>
+                        <div class="info-content">阿韋、企劃</div>
+                    </div>
+                    <div class="info-block">
+                        <div class="info-label"><i class="fas fa-lightbulb"></i> 什麼時候用</div>
+                        <div class="info-content">結尾不知道怎麼收，需要引導轉換時</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 05 -->
+            <div class="db-card">
+                <div class="card-header">
+                    <div class="db-number">05</div>
+                    <div class="db-title">腳本結構庫</div>
+                </div>
+                <div class="card-body">
+                    <div class="info-block">
+                        <div class="info-label"><i class="fas fa-box"></i> 存什麼</div>
+                        <div class="info-content highlight">敘事框架模板</div>
+                    </div>
+                    <div class="info-block">
+                        <div class="info-label"><i class="fas fa-user"></i> 誰最常用</div>
+                        <div class="info-content">企劃</div>
+                    </div>
+                    <div class="info-block">
+                        <div class="info-label"><i class="fas fa-lightbulb"></i> 什麼時候用</div>
+                        <div class="info-content">規劃整支影片敘事節奏與結構時</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 06 -->
+            <div class="db-card">
+                <div class="card-header">
+                    <div class="db-number">06</div>
+                    <div class="db-title">視覺錘庫</div>
+                </div>
+                <div class="card-body">
+                    <div class="info-block">
+                        <div class="info-label"><i class="fas fa-box"></i> 存什麼</div>
+                        <div class="info-content highlight">視覺元素參考</div>
+                    </div>
+                    <div class="info-block">
+                        <div class="info-label"><i class="fas fa-user"></i> 誰最常用</div>
+                        <div class="info-content">阿韋</div>
+                    </div>
+                    <!-- Removed the third info-block to save vertical space -->
+                </div>
+            </div>
+
+            <!-- 07 -->
+            <div class="db-card">
+                <div class="card-header">
+                    <div class="db-number">07</div>
+                    <div class="db-title">語言釘庫</div>
+                </div>
+                <div class="card-body">
+                    <div class="info-block">
+                        <div class="info-label"><i class="fas fa-box"></i> 存什麼</div>
+                        <div class="info-content highlight">金句、記憶點文案</div>
+                    </div>
+                    <div class="info-block">
+                        <div class="info-label"><i class="fas fa-user"></i> 誰最常用</div>
+                        <div class="info-content">企劃</div>
+                    </div>
+                    <!-- Removed the third info-block to save vertical space -->
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

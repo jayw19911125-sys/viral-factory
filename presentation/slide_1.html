@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;800&display=swap" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css" rel="stylesheet">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: 'Space Grotesk', sans-serif; }
+        .slide-container { 
+            width: 1280px; 
+            min-height: 720px; 
+            background-color: #F8F9FA; 
+            position: relative;
+            display: grid;
+            grid-template-columns: repeat(12, 1fr);
+            grid-template-rows: repeat(12, 1fr);
+            gap: 16px;
+            padding: 40px 40px 24px; /* keep top padding, reduce bottom */
+            overflow: hidden;
+        }
+        
+        /* Grid Background Pattern */
+        .slide-container::before {
+            content: '';
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background-image: 
+                linear-gradient(to right, rgba(33, 37, 41, 0.05) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(33, 37, 41, 0.05) 1px, transparent 1px);
+            background-size: 40px 40px;
+            z-index: 0;
+        }
+
+        .main-card {
+            grid-column: 2 / 11;
+            grid-row: 3 / 9;
+            background: white;
+            border: 1px solid #212529;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 60px 60px 36px; /* keep top padding intact, reduce bottom */
+            position: relative;
+            box-shadow: 10px 10px 0px #4361EE;
+        }
+
+        .main-card::after {
+            content: '';
+            position: absolute;
+            top: -10px; right: -10px;
+            width: 40px; height: 40px;
+            border-top: 4px solid #F72585;
+            border-right: 4px solid #F72585;
+        }
+
+        .title {
+            color: #212529;
+            font-size: 64px;
+            font-weight: 800;
+            line-height: 1.2;
+            margin-bottom: 24px;
+            letter-spacing: -1px;
+        }
+
+        .title span {
+            color: #4361EE;
+        }
+
+        .subtitle {
+            color: #495057;
+            font-size: 32px;
+            font-weight: 400;
+            line-height: 1.5;
+            max-width: 800px;
+            border-left: 4px solid #F72585;
+            padding-left: 20px;
+        }
+
+        .tags-container {
+            grid-column: 2 / 11;
+            grid-row: 10 / 12;
+            z-index: 1;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .tag {
+            background: #212529;
+            color: white;
+            padding: 12px 24px;
+            font-size: 20px;
+            font-weight: 400;
+            border: 1px solid #212529;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .tag i {
+            color: #F72585;
+        }
+
+        /* Decorative Elements */
+        .decor-1 {
+            grid-column: 11 / 13;
+            grid-row: 3 / 6;
+            border: 1px solid #212529;
+            background: repeating-linear-gradient(
+                45deg,
+                transparent,
+                transparent 10px,
+                rgba(33, 37, 41, 0.1) 10px,
+                rgba(33, 37, 41, 0.1) 20px
+            );
+            z-index: 1;
+        }
+
+        .decor-2 {
+            grid-column: 1 / 2;
+            grid-row: 8 / 12;
+            background: #4361EE;
+            z-index: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="slide-container">
+        <div class="decor-1"></div>
+        <div class="decor-2"></div>
+        
+        <div class="main-card">
+            <h1 class="title">爆款短影音拆解工廠 <span>v3.0</span></h1>
+            <p class="subtitle">每天自動拆解爆款影片，讓好創的內容創作有根據、有方向</p>
+        </div>
+
+        <div class="tags-container">
+            <div class="tag"><i class="fas fa-building"></i> 好創整合行銷</div>
+            <div class="tag"><i class="fas fa-robot"></i> AI 自動化系統</div>
+            <div class="tag"><i class="fas fa-calendar-alt"></i> 2026</div>
+        </div>
+    </div>
+</body>
+</html>

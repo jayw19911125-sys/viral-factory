@@ -1,0 +1,132 @@
+{
+  "project_info": {
+    "title": "爆款短影音拆解工廠 v3.0",
+    "created": 1781470430.882,
+    "last_updated": 1781470883.319,
+    "total_slides": 12
+  },
+  "slides": [
+    {
+      "id": "slide_1",
+      "state": "edited",
+      "pageNum": 1
+    },
+    {
+      "id": "slide_2",
+      "state": "edited",
+      "pageNum": 2
+    },
+    {
+      "id": "slide_3",
+      "state": "edited",
+      "pageNum": 3
+    },
+    {
+      "id": "slide_4",
+      "state": "edited",
+      "pageNum": 4
+    },
+    {
+      "id": "slide_5",
+      "state": "edited",
+      "pageNum": 5
+    },
+    {
+      "id": "slide_6",
+      "state": "edited",
+      "pageNum": 6
+    },
+    {
+      "id": "slide_7",
+      "state": "edited",
+      "pageNum": 7
+    },
+    {
+      "id": "slide_8",
+      "state": "edited",
+      "pageNum": 8
+    },
+    {
+      "id": "slide_9",
+      "state": "edited",
+      "pageNum": 9
+    },
+    {
+      "id": "slide_10",
+      "state": "edited",
+      "pageNum": 10
+    },
+    {
+      "id": "slide_11",
+      "state": "edited",
+      "pageNum": 11
+    },
+    {
+      "id": "slide_12",
+      "state": "edited",
+      "pageNum": 12
+    }
+  ],
+  "outline": [
+    {
+      "id": "slide_1",
+      "title": "爆款短影音拆解工廠 v3.0",
+      "summary": "簡報標題頁，介紹主題與副標題"
+    },
+    {
+      "id": "slide_2",
+      "title": "為何建立此系統？",
+      "summary": "說明系統解決的痛點與三大商業價值"
+    },
+    {
+      "id": "slide_3",
+      "title": "系統運作全貌",
+      "summary": "展示系統每日自動執行的流程架構"
+    },
+    {
+      "id": "slide_4",
+      "title": "資料來源與拆解維度",
+      "summary": "說明影片來源及 GPT 深度拆解的 12 個欄位"
+    },
+    {
+      "id": "slide_5",
+      "title": "自動分庫與評分機制",
+      "summary": "介紹 1-5 分評分標準與自動分配至各子庫的邏輯"
+    },
+    {
+      "id": "slide_6",
+      "title": "Notion 庫房架構 (1/2)",
+      "summary": "介紹 02 爆款拆解庫與 35 已驗證熱門腳本庫"
+    },
+    {
+      "id": "slide_7",
+      "title": "Notion 庫房架構 (2/2)",
+      "summary": "介紹 03 到 07 庫（鉤子、呼籲、結構、視覺錘、語言釘）"
+    },
+    {
+      "id": "slide_8",
+      "title": "團隊角色分工",
+      "summary": "說明企劃、剪輯、營運在系統中的具體職責"
+    },
+    {
+      "id": "slide_9",
+      "title": "自動化通知與週報",
+      "summary": "展示 Slack 通知機制與每週自動產生的報告"
+    },
+    {
+      "id": "slide_10",
+      "title": "版本更新與手冊維護",
+      "summary": "說明系統如何自動更新手冊與追蹤版本"
+    },
+    {
+      "id": "slide_11",
+      "title": "未來展望與擴充",
+      "summary": "預告即將加入的功能（如 IG Reels 監控）"
+    },
+    {
+      "id": "slide_12",
+      "title": "Q&A 與討論",
+      "summary": "結尾問答時間"
+    }
+  ]
+}
