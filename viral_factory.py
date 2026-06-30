@@ -182,6 +182,37 @@ def detect_platform(url: str) -> str:
     return "其他"
 
 
+def fetch_video_metadata(url: str) -> dict:
+    """
+    用 yt-dlp --dump-json 取得影片 metadata（不下載）
+    回傳 {title, description, view_count, uploader, duration}
+    """
+    cmd = [
+        "yt-dlp",
+        "--dump-json",
+        "--no-playlist",
+        "--no-warnings",
+        "--ignore-errors",
+        url
+    ]
+    result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
+    if result.returncode == 0 and result.stdout.strip():
+        try:
+            info = json.loads(result.stdout.strip().split("\n")[0])
+            return {
+                "title": info.get("title", ""),
+                "description": info.get("description", ""),
+                "view_count": info.get("view_count", 0),
+                "like_count": info.get("like_count", 0),
+                "uploader": info.get("uploader", ""),
+                "duration": info.get("duration", 0),
+                "upload_date": info.get("upload_date", ""),
+            }
+        except Exception:
+            pass
+    return {}
+
+
 def download_video(url: str, output_dir: str) -> str:
     """用 yt-dlp 下載影片音頻，回傳本地檔案路徑"""
     output_template = os.path.join(output_dir, "%(id)s.%(ext)s")
@@ -195,7 +226,11 @@ def download_video(url: str, output_dir: str) -> str:
     ]
     result = subprocess.run(cmd, capture_output=True, text=True, timeout=120)
     if result.returncode != 0:
-        raise RuntimeError(f"yt-dlp 失敗：{result.stderr[:300]}")
+        err = result.stderr[:300]
+        # IP 封鎖或 403 時拋出特定錯誤，讓上層降級處理
+        if "blocked" in err.lower() or "403" in err or "forbidden" in err.lower():
+            raise RuntimeError(f"IP_BLOCKED:{err}")
+        raise RuntimeError(f"yt-dlp 失敗：{err}")
 
     files = sorted(Path(output_dir).glob("*"), key=lambda f: f.stat().st_mtime)
     if not files:
@@ -435,7 +470,11 @@ def write_to_notion_via_mcp(url: str, platform: str, transcript: str, analysis: 
     result = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
 
     if result.returncode != 0:
-        raise RuntimeError(f"Notion 寫入失敗：{result.stderr[:200]}")
+        err_msg = result.stderr[:300]
+        # Notion MCP 未啟用時，降級存本地 JSON
+        if "not found" in err_msg or "server" in err_msg.lower():
+            return _save_to_local_queue(payload, url)
+        raise RuntimeError(f"Notion 寫入失敗：{err_msg}")
 
     # 嘗試解析回傳的頁面 URL
     try:
@@ -445,6 +484,36 @@ def write_to_notion_via_mcp(url: str, platform: str, transcript: str, analysis: 
         return pages[0].get("url", "https://notion.so") if pages else "https://notion.so"
     except Exception:
         return "https://notion.so"
+
+
+def _save_to_local_queue(payload: dict, url: str) -> str:
+    """
+    Notion MCP 未啟用時，將拆解結果存到本地 JSON 佇列
+    路徑：/home/ubuntu/viral_factory/data/notion_queue.json
+    """
+    queue_file = Path("/home/ubuntu/viral_factory/data/notion_queue.json")
+    queue_file.parent.mkdir(parents=True, exist_ok=True)
+
+    queue = []
+    if queue_file.exists():
+        try:
+            with open(queue_file, "r", encoding="utf-8") as f:
+                queue = json.load(f)
+        except Exception:
+            queue = []
+
+    entry = {
+        "url": url,
+        "queued_at": datetime.now().isoformat(),
+        "payload": payload
+    }
+    queue.append(entry)
+
+    with open(queue_file, "w", encoding="utf-8") as f:
+        json.dump(queue, f, ensure_ascii=False, indent=2)
+
+    print(f"  ⚠️  Notion MCP 未啟用，已存入本地佇列（{len(queue)} 筆）")
+    return f"local://notion_queue/{len(queue)}"
 
 
 def send_slack_dm(message: str, channel: str = None):
@@ -484,22 +553,49 @@ def process_single_video(url: str, whisper_available: bool = True) -> dict:
             return {"success": False, "error": "duplicate", "url": url}
 
         with tempfile.TemporaryDirectory() as tmpdir:
-            # Step 1: 下載
+            # Step 1: 下載（失敗時自動降級為無音頻模式）
             print(f"  [1/5] 下載影片...")
-            audio_path = download_video(url, tmpdir)
-            size_kb = Path(audio_path).stat().st_size / 1024
-            print(f"  下載完成：{Path(audio_path).name}（{size_kb:.0f} KB）")
+            audio_path = None
+            ip_blocked = False
+            try:
+                audio_path = download_video(url, tmpdir)
+                size_kb = Path(audio_path).stat().st_size / 1024
+                print(f"  下載完成：{Path(audio_path).name}（{size_kb:.0f} KB）")
+            except RuntimeError as e:
+                if "IP_BLOCKED" in str(e) or "403" in str(e) or "blocked" in str(e).lower():
+                    ip_blocked = True
+                    print(f"  ⚠️  IP 被封鎖，自動降級為無音頻模式")
+                else:
+                    raise  # 其他錯誤正常拋出
 
-            # Step 2: 轉文字
-            if whisper_available:
+            # Step 2: 轉文字（或用 metadata 代替）
+            if ip_blocked or audio_path is None:
+                # 降級：用 yt-dlp metadata 取得影片標題和描述
+                print(f"  [2/5] 無音頻模式：抓取影片 metadata...")
+                meta = fetch_video_metadata(url)
+                title_text = meta.get("title", "")
+                desc_text = meta.get("description", "")
+                view_count = meta.get("view_count", 0)
+                uploader = meta.get("uploader", "")
+                # 用 metadata 組合成「逆字稿代替」
+                transcript = (
+                    f"⚠️ 無法下載音頻（IP 被封鎖），以文字資訊進行拆解\n\n"
+                    f"影片標題：{title_text}\n"
+                    f"影片描述：{desc_text}\n"
+                    f"作者：{uploader}\n"
+                    f"觀看數：{view_count:,}\n"
+                    f"來源連結：{url}"
+                )
+                print(f"  metadata 抓取完成：{title_text[:40]}")
+            elif not whisper_available:
+                transcript = "（Whisper API 額度不足，逐字稿待補充）"
+                print(f"  [2/5] 跳過轉錄（API 額度不足）")
+            else:
                 print(f"  [2/5] Whisper 語音轉文字...")
                 transcript = transcribe_audio(audio_path)
                 if not transcript.strip():
                     transcript = "（無語音內容，純視覺影片）"
                 print(f"  轉錄完成：{len(transcript)} 字")
-            else:
-                transcript = "（Whisper API 額度不足，逐字稿待補充）"
-                print(f"  [2/5] 跳過轉錄（API 額度不足）")
 
             # Step 3: AI 拆解
             print(f"  [3/5] GPT 拆解分析...")
