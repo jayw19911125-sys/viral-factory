@@ -1,6 +1,6 @@
 {
   "round": 1,
-  "current_industry_index": 7,
+  "current_industry_index": 8,
   "industries": [
     "美容保養",
     "彩妝美髮",
@@ -110,9 +110,15 @@
       ]
     },
     "餐飲食品": {
-      "round1": 0,
+      "round1": 5,
       "round2": 0,
-      "processed_ids": []
+      "processed_ids": [
+        "mock_food delivery_000",
+        "mock_restaurant_000",
+        "mock_healthy food_000",
+        "mock_meal kit_000",
+        "mock_takeaway_000"
+      ]
     },
     "烘焙甜點": {
       "round1": 0,
@@ -215,5 +221,5 @@
       "processed_ids": []
     }
   },
-  "updated_at": "2026-06-26T01:06:52.578699"
+  "updated_at": "2026-06-30T01:10:54.742864"
 }
