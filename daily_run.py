@@ -208,3 +208,18 @@ def main():
 
 if __name__ == "__main__":
     main()
+
+    # 發送管理日報給子權
+    print("\n" + "="*50)
+    print(f"📊 正在生成管理日報並發送至 Slack...")
+    try:
+        from management_report import generate_management_report
+        from viral_factory import send_slack_dm
+        
+        mgt_report = generate_management_report()
+        # 發送到主頻道 (C0AQG307XJT)
+        send_slack_dm(mgt_report, channel="C0AQG307XJT") 
+        print("  ✅ 管理日報已發送至 Slack")
+    except Exception as e:
+        print(f"  ⚠️ 管理日報發送失敗: {e}")
+    print("="*50)

@@ -9,10 +9,11 @@
 
 import os
 import json
-import tempfile
+import os
 import subprocess
-import sys
+import time
 from datetime import datetime
+from execution_tracker import log_delivery
 from pathlib import Path
 
 from openai import OpenAI
@@ -666,9 +667,16 @@ def process_single_video(url: str, whisper_available: bool = True) -> dict:
                 f"📚 完整拆解分析 → {notion_url}"
             )
 
-            # 發送兩則分角色通知
-            send_slack_dm(msg_planner, channel=SLACK_AUTO_CH)   # 小鑫企劃版 → #自動化訊息來源
-            send_slack_dm(msg_editor, channel=SLACK_AUTO_CH)    # 阿韋剪輯版 → #自動化訊息來源
+            # 發送兩則分角色通知，並記錄送達狀態
+            # 加入互動按鈕建議 (Slack Block Kit 格式需透過 API，目前透過文字指令引導)
+            msg_planner += "\n\n✅ *確認收到請回覆：* `OK 小鑫`"
+            msg_editor += "\n\n✅ *確認收到請回覆：* `OK 阿韋`"
+            
+            if send_slack_dm(msg_planner, channel=SLACK_AUTO_CH):
+                log_delivery(video_id, "planner", status="delivered")
+            
+            if send_slack_dm(msg_editor, channel=SLACK_AUTO_CH):
+                log_delivery(video_id, "editor", status="delivered")
             print(f"  通知已發送（企劃版 + 剪輯版）")
 
             print(f"\n  ✅ 完成！")
