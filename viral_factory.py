@@ -132,7 +132,9 @@ ANALYSIS_PROMPT = """
     "前3秒剪輯指令": "具體說明前3秒要怎麼剪：鏡頭切換方式、字幕出現時機、音效使用",
     "節奏時間軸": "用時間點描述整支影片的剪輯節奏，例如：0-3秒快切3個鏡頭→3-15秒平穩敘事→15-25秒衝突高潮→25秒後CTA",
     "視覺錘強調方式": "剪輯時如何強調這支影片的視覺錘？用什麼特效或字幕設計？",
-    "音效與音樂建議": "這支影片的音效節奏如何配合剪輯？哪些時間點需要特別的音效強調？"
+    "音效與音樂建議": "這支影片的音效節奏如何配合剪輯？哪些時間點需要特別的音效強調？",
+    "熱門音樂趨勢": "根據當前市場（TikTok/Meta）判斷這類影片適合搭配的音樂風格、情緒功能，並說明為什麼",
+    "剪輯技巧建議": "針對這支影片的畫面，給出 3 個具體的剪輯技巧建議（例如：畫面放大縮小、特定轉場、關鍵字字幕強調位置）"
   }},
 
   "熱門音樂": "音樂風格、情緒功能、為什麼選這首（若無法判斷填：需人工補充）",
@@ -645,6 +647,8 @@ def process_single_video(url: str, whisper_available: bool = True) -> dict:
             timeline = editor_tips.get('節奏時間軸', '') if isinstance(editor_tips, dict) else ''
             visual_tip = editor_tips.get('視覺錘強調方式', '') if isinstance(editor_tips, dict) else ''
             audio_tip = editor_tips.get('音效與音樂建議', '') if isinstance(editor_tips, dict) else ''
+            music_trend = editor_tips.get('熱門音樂趨勢', '') if isinstance(editor_tips, dict) else ''
+            edit_tips = editor_tips.get('剪輯技巧建議', '') if isinstance(editor_tips, dict) else ''
             why_good = analysis.get('為什麼是好影片', '')
 
             msg_editor = (
@@ -657,6 +661,8 @@ def process_single_video(url: str, whisper_available: bool = True) -> dict:
                 f"📊 *節奏時間軸：*\n{timeline}\n\n"
                 f"🔨 *視覺錘強調方式：*\n{visual_tip}\n\n"
                 f"🎵 *音效與音樂建議：*\n{audio_tip}\n\n"
+                f"🎶 *熱門音樂趨勢：*\n{music_trend}\n\n"
+                f"✂️ *剪輯技巧建議：*\n{edit_tips}\n\n"
                 f"📚 完整拆解分析 → {notion_url}"
             )
 
