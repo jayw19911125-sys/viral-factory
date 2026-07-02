@@ -87,26 +87,34 @@ def fetch_account_videos(account: dict, max_count: int = 10) -> list:
     videos = []
     for v in raw_videos[:max_count]:
         view_count = 0
-        try:
-            cmd_detail = [
-                "yt-dlp",
-                "--dump-json",
-                "--no-playlist",
-                "--no-warnings",
-                "--ignore-errors",
-                v["url"]
-            ]
-            detail_result = subprocess.run(
-                cmd_detail, capture_output=True, text=True, timeout=15
-            )
-            if detail_result.returncode == 0 and detail_result.stdout.strip():
-                info = json.loads(detail_result.stdout.strip().split("\n")[0])
-                view_count = info.get("view_count") or 0
-                # 若 title 為空，用 detail 補充
-                if not v["title"]:
-                    v["title"] = info.get("title", "")
-        except Exception:
-            pass  # 取不到 view_count 就用 0，不影響主流程
+        # 加入重試機制：yt-dlp 抹取 TikTok 觀看數失敗率高，最多重試 2 次
+        for attempt in range(2):
+            try:
+                cmd_detail = [
+                    "yt-dlp",
+                    "--dump-json",
+                    "--no-playlist",
+                    "--no-warnings",
+                    "--ignore-errors",
+                    v["url"]
+                ]
+                detail_result = subprocess.run(
+                    cmd_detail, capture_output=True, text=True, timeout=20
+                )
+                if detail_result.returncode == 0 and detail_result.stdout.strip():
+                    info = json.loads(detail_result.stdout.strip().split("\n")[0])
+                    view_count = info.get("view_count") or 0
+                    # 若 title 為空，用 detail 補充
+                    if not v["title"]:
+                        v["title"] = info.get("title", "")
+                    break  # 成功就不再重試
+                elif attempt == 0:
+                    time.sleep(random.uniform(1.0, 2.5))  # 第一次失敗等待後重試
+            except Exception as e:
+                if attempt == 0:
+                    time.sleep(random.uniform(1.0, 2.5))
+                else:
+                    pass  # 重試兩次都失敗，用 view_count=0，不影響主流程
 
         videos.append({
             "url": v["url"],

@@ -60,6 +60,30 @@ logger = logging.getLogger(__name__)
 
 # ─── 主執行 ───────────────────────────────────────────────
 
+def _check_env() -> bool:
+    """啟動前驗證必要環境變數，避免執行到一半才報錯"""
+    required = {
+        "OPENAI_API_KEY": "用於 Whisper 轉錄與 GPT 拆解",
+    }
+    optional = {
+        "META_ACCESS_TOKEN": "用於 Meta 廣告庫拆取（缺少則僅有機內容）",
+        "WHISPER_AVAILABLE": "控制是否啟用 Whisper（預設 true）",
+    }
+    all_ok = True
+    for key, desc in required.items():
+        val = os.environ.get(key, "")
+        if not val:
+            logger.error(f"❌ 缺少必要環境變數 {key}  用途：{desc}")
+            all_ok = False
+        else:
+            logger.info(f"✅ {key} 已設定（前8碼：{val[:8]}...)「{desc}」")
+    for key, desc in optional.items():
+        val = os.environ.get(key, "")
+        if not val:
+            logger.warning(f"⚠️  {key} 未設定（非必要）  用途：{desc}")
+    return all_ok
+
+
 def main():
     start_time = datetime.now()
     logger.info("=" * 60)
@@ -67,6 +91,11 @@ def main():
     logger.info("雙來源系統：TikTok/Reels 有機內容 + Meta 廣告素材")
     logger.info("新增：評分系統 + 素材自動分配（03/04/05/06/07/35 庫）")
     logger.info("=" * 60)
+
+    # 環境變數驗證（必要 Key 缺少則中止）
+    if not _check_env():
+        logger.error("必要環境變數缺少，任務中止。請檢查 .env 檔案。")
+        return
 
     # 判斷 Whisper 是否可用（OpenAI 額度）
     WHISPER_AVAILABLE = os.environ.get("WHISPER_AVAILABLE", "true").lower() == "true"

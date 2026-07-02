@@ -72,7 +72,12 @@ def score_video(video_data: dict) -> dict:
             response_format={"type": "json_object"},
             temperature=0.3,
         )
-        result = json.loads(response.choices[0].message.content)
+        raw_content = response.choices[0].message.content
+        # 防護：移除 GPT 偶爾輸出的 Markdown 代碼塊標記（```json ... ```）
+        if raw_content.strip().startswith("```"):
+            lines = raw_content.strip().split("\n")
+            raw_content = "\n".join(lines[1:-1] if lines[-1].strip() == "```" else lines[1:])
+        result = json.loads(raw_content)
         return result
     except Exception as e:
         print(f"[評分失敗] {e}")

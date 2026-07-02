@@ -9,6 +9,7 @@
 
 import os
 import json
+import hashlib
 import subprocess
 import tempfile
 import time
@@ -273,7 +274,16 @@ def analyze_with_gpt4o(transcript: str, platform: str, url: str) -> dict:
     if response.choices is None:
         err = getattr(response, 'error', 'Unknown error')
         raise RuntimeError(f"GPT API 錯誤：{err}")
-    return json.loads(response.choices[0].message.content)
+    raw_content = response.choices[0].message.content
+    # 防護：移除 GPT 偶爾輸出的 Markdown 代碼塊標記（```json ... ```）
+    if raw_content.strip().startswith("```"):
+        lines = raw_content.strip().split("\n")
+        # 移除第一行（```json 或 ```）和最後一行（```）
+        raw_content = "\n".join(lines[1:-1] if lines[-1].strip() == "```" else lines[1:])
+    try:
+        return json.loads(raw_content)
+    except json.JSONDecodeError as e:
+        raise RuntimeError(f"GPT 輸出 JSON 解析失敗：{e}\n原始輸出（前200字）：{raw_content[:200]}")
 
 
 def check_duplicate_via_mcp(url: str) -> bool:
@@ -586,8 +596,12 @@ def _save_to_local_queue(payload: dict, url: str) -> str:
     return f"local://notion_queue/{len(queue)}"
 
 
-def send_slack_dm(message: str, channel: str = None):
-    """透過 Slack MCP 發送訊息"""
+def send_slack_dm(message: str, channel: str = None) -> bool:
+    """
+    透過 Slack MCP 發送訊息
+    回傳 True 表示發送成功，False 表示失敗
+    內建一次重試機制，避免短暂網路波動就放棄
+    """
     target = channel or SLACK_AWEI_ID
     cmd = [
         "manus-mcp-cli", "tool", "call", "slack_send_message",
@@ -597,9 +611,20 @@ def send_slack_dm(message: str, channel: str = None):
             "message": message
         })
     ]
-    result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
-    if result.returncode != 0:
-        print(f"  ⚠️  Slack 發送失敗：{result.stderr[:100]}")
+    for attempt in range(2):
+        try:
+            result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
+            if result.returncode == 0:
+                return True
+            if attempt == 0:
+                print(f"  ⚠️  Slack 發送失敗，重試中... ({result.stderr[:80]})")
+                time.sleep(2)
+        except Exception as e:
+            if attempt == 0:
+                print(f"  ⚠️  Slack 發送異常，重試中... ({e})")
+                time.sleep(2)
+    print(f"  ❌ Slack 發送失敗（已重試）：目標頻道 {target}")
+    return False
 
 
 # ─── 主流程 ───────────────────────────────────────────────
@@ -610,6 +635,8 @@ def process_single_video(url: str, whisper_available: bool = True) -> dict:
     whisper_available: False 時跳過轉錄，使用模擬逐字稿（測試用）
     """
     platform = detect_platform(url)
+    # 用 URL 的 MD5 前 12 碼作為唯一 video_id（用於 execution_tracker 追蹤）
+    video_id = hashlib.md5(url.encode()).hexdigest()[:12]
     print(f"\n{'='*55}")
     print(f"開始拆解：{url[:60]}")
     print(f"平台：{platform}")
