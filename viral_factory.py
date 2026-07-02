@@ -29,11 +29,12 @@ WHISPER_API_KEY = os.environ.get(
 # Notion 資料庫 ID（02 爆款拆解庫）
 NOTION_DB_ID = "82097a06-fae5-83bd-a8c3-87236d3713aa"
 
-# Slack 設定
-SLACK_AWEI_ID    = "U0B4FG0ER89"   # 阿韋 User ID（用於 @mention）
-SLACK_XINXIN_ID  = "U0BA2DKQ7GF"   # 小鑫 User ID（用於 @mention）
-SLACK_TEAM_CH    = "C0AQG307XJT"   # #all-團隊主頻道
-SLACK_AUTO_CH    = "C0AUH4QKF5M"   # #自動化訊息來源（影音類別）
+# Slack 設定（從 .env 讀取，人員異動時只需改 .env 不需動程式碼）
+# .env 路徑：/home/ubuntu/viral_factory/.env
+SLACK_AWEI_ID    = os.environ.get("SLACK_AWEI_ID",    "U0B4FG0ER89")   # 阿韋 User ID
+SLACK_XINXIN_ID  = os.environ.get("SLACK_XINXIN_ID",  "U0BA2DKQ7GF")   # 小鑫 User ID
+SLACK_TEAM_CH    = os.environ.get("SLACK_TEAM_CH",    "C0AQG307XJT")   # #all-團隊主頻道
+SLACK_AUTO_CH    = os.environ.get("SLACK_AUTO_CH",    "C0AUH4QKF5M")   # #自動化訊息來源（影音類別）
 
 # ─── GPT-4o 拆解 Prompt（v4.0 全類型分角色版）────────────────
 # 新增：影片類型分類（6種）、企劃師版輸出、剪輯師版輸出、爆款原因三層分析
