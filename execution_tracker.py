@@ -1,8 +1,10 @@
-import json
 import os
+import json
+from pathlib import Path
 from datetime import datetime
 
-TRACKER_FILE = "/home/ubuntu/viral_factory/data/execution_tracker.json"
+# 動態計算路徑，避免硬編碼 /home/ubuntu 導致環境移植失敗
+TRACKER_FILE = str(Path(__file__).parent / "data" / "execution_tracker.json")
 
 def init_tracker():
     if not os.path.exists(os.path.dirname(TRACKER_FILE)):

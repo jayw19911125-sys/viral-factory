@@ -260,8 +260,8 @@ if __name__ == "__main__":
         from viral_factory import send_slack_dm
         
         mgt_report = generate_management_report()
-        # 發送到主頻道 (C0AQG307XJT)
-        send_slack_dm(mgt_report, channel="C0AQG307XJT") 
+        # 發送到主頻道（從環境變數讀取，不硬編碼）
+        send_slack_dm(mgt_report, channel=os.environ.get("SLACK_TEAM_CH", "C0AQG307XJT"))
         print("  ✅ 管理日報已發送至 Slack")
     except Exception as e:
         print(f"  ⚠️ 管理日報發送失敗: {e}")

@@ -15,8 +15,8 @@ from datetime import datetime, timedelta
 from openai import OpenAI
 
 # ─── 設定區 ───────────────────────────────────────────────
-NOTION_DB_ID     = "82097a06-fae5-83bd-a8c3-87236d3713aa"
-SLACK_TEAM_CH    = "C0AQG307XJT"   # #all-團隊主頻道
+NOTION_DB_ID     = os.environ.get("NOTION_DB_MAIN", "82097a06-fae5-83bd-a8c3-87236d3713aa")
+SLACK_TEAM_CH    = os.environ.get("SLACK_TEAM_CH",  "C0AQG307XJT")   # #all-團隊主頻道
 
 WEEKLY_ANALYSIS_PROMPT = """
 你是好創整合行銷的短影音策略顧問，專門分析台灣市場的爆款短影音規律。

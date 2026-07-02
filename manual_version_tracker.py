@@ -17,6 +17,7 @@ manual_version_tracker.py
   手動觸發：python3 manual_version_tracker.py major "新增 IG Reels 監控"
 """
 
+import os
 import json
 import hashlib
 import subprocess
@@ -30,8 +31,8 @@ BASE_DIR        = Path(__file__).parent
 VERSION_JSON    = BASE_DIR / ".manual_version.json"
 MANUAL_PATH     = BASE_DIR / "notion_visual_manual.md"   # 唯一手冊路徑（修復缺陷4）
 
-NOTION_PAGE_ID  = "37f97a06-fae5-813e-966d-c762a2bb7eb6"
-SLACK_TEAM_CH   = "C0AQG307XJT"   # #all-團隊主頻道
+NOTION_PAGE_ID  = os.environ.get("NOTION_PAGE_VERSION", "37f97a06-fae5-813e-966d-c762a2bb7eb6")
+SLACK_TEAM_CH   = os.environ.get("SLACK_TEAM_CH",       "C0AQG307XJT")   # #all-團隊主頻道
 TW_TZ           = timezone(timedelta(hours=8))
 
 # 版本歷程章節的唯一錨點（修復缺陷2：不依賴章節名稱）

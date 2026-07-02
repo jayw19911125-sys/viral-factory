@@ -19,16 +19,16 @@ import subprocess
 import tempfile
 from script_scorer import score_video, is_high_score
 
-# Notion 庫房 ID 對照表（真實 ID，已從 Notion 搜尋確認）
+# Notion 庫房 ID 對照表（更改庫房時只需改 .env，不需動程式碼）
 NOTION_DB_IDS = {
-    "爆款拆解庫": "82097a06-fae5-83bd-a8c3-87236d3713aa",   # 02 庫
-    "開頭鉤子庫": "44197a06-fae5-8363-b6c4-015bde8b7d9e",   # 03 庫
-    "結尾呼籲庫": "b9c97a06-fae5-8345-89c5-815c687e348f",   # 04 庫
-    "腳本結構庫": "6c497a06-fae5-823c-98d6-017d48acb70d",   # 05 庫
-    "視覺錘庫": "bcbe1980-6529-4b6b-be2c-a2fcb89bc778",     # 06 庫
-    "語言釘庫": "dc9851e2-e611-4231-b01b-e85ef7afd9b5",     # 07 庫
-    "IP型腳本庫": "efc0711f-f496-4eec-b78f-d05de9cb9653",   # 35 子庫
-    "導購型腳本庫": "461772ac-895a-4f8c-b5a7-f5305ecc521b", # 35 子庫
+    "爆款拆解庫": os.environ.get("NOTION_DB_MAIN",         "82097a06-fae5-83bd-a8c3-87236d3713aa"),  # 02 庫
+    "開頭鉤子庫": os.environ.get("NOTION_DB_HOOK",         "44197a06-fae5-8363-b6c4-015bde8b7d9e"),  # 03 庫
+    "結尾呼籲庫": os.environ.get("NOTION_DB_CTA",          "b9c97a06-fae5-8345-89c5-815c687e348f"),  # 04 庫
+    "腳本結構庫": os.environ.get("NOTION_DB_STRUCTURE",    "6c497a06-fae5-823c-98d6-017d48acb70d"),  # 05 庫
+    "視覺錘庫":   os.environ.get("NOTION_DB_VISUAL",      "bcbe1980-6529-4b6b-be2c-a2fcb89bc778"),  # 06 庫
+    "語言釘庫":   os.environ.get("NOTION_DB_VERBAL",      "dc9851e2-e611-4231-b01b-e85ef7afd9b5"),  # 07 庫
+    "IP型腳本庫": os.environ.get("NOTION_DB_IP_SCRIPT",   "efc0711f-f496-4eec-b78f-d05de9cb9653"),  # 35 子庫
+    "導購型腳本庫": os.environ.get("NOTION_DB_SALES_SCRIPT", "461772ac-895a-4f8c-b5a7-f5305ecc521b"), # 35 子庫
 }
 
 # 庫房顯示名稱（用於 Slack 通知）

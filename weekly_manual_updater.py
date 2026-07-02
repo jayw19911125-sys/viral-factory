@@ -25,20 +25,20 @@ from pathlib import Path
 from openai import OpenAI
 
 # ─── 設定區 ───────────────────────────────────────────────
-SLACK_TEAM_CH   = "C0AQG307XJT"   # #all-團隊主頻道
-SLACK_AWEI_ID   = "U0B4FG0ER89"   # 阿韋 DM
-SLACK_ZIQUAN_ID = "U07MHPJKQ8V"   # 子權 DM（COO）
+SLACK_TEAM_CH   = os.environ.get("SLACK_TEAM_CH",   "C0AQG307XJT")   # #all-團隊主頻道
+SLACK_AWEI_ID   = os.environ.get("SLACK_AWEI_ID",   "U0B4FG0ER89")   # 阿韋 DM
+SLACK_ZIQUAN_ID = os.environ.get("SLACK_ZIQUAN_ID", "U07MHPJKQ8V")   # 子權 DM（COO）
 
-# Notion 庫房 ID
+# Notion 庫房 ID（更改庫房時只需改 .env）
 NOTION_DB = {
-    "02_拆解庫":    "82097a06fae583bda8c387236d3713aa",
-    "03_鉤子庫":    "44197a06fae58363b6c4015bde8b7d9e",
-    "04_CTA庫":     "b9c97a06fae5834589c5815c687e348f",
-    "05_結構庫":    "6c497a06fae5823c98d6017d48acb70d",
-    "06_視覺錘庫":  "bcbe1980652940ecb78fd05de9cb9653",
-    "07_語言釘庫":  "dc9851e2e6114231b01be85ef7afd9b5",
-    "35_IP型":      "efc0711ff4964eecb78fd05de9cb9653",
-    "35_導購型":    "461772ac895a4f8cb5a7f5305ecc521b",
+    "02_拆解庫":    os.environ.get("NOTION_DB_MAIN",         "82097a06fae583bda8c387236d3713aa").replace("-", ""),
+    "03_鉤子庫":    os.environ.get("NOTION_DB_HOOK",         "44197a06fae58363b6c4015bde8b7d9e").replace("-", ""),
+    "04_CTA庫":     os.environ.get("NOTION_DB_CTA",          "b9c97a06fae5834589c5815c687e348f").replace("-", ""),
+    "05_結構庫":    os.environ.get("NOTION_DB_STRUCTURE",    "6c497a06fae5823c98d6017d48acb70d").replace("-", ""),
+    "06_視覺錘庫":  os.environ.get("NOTION_DB_VISUAL",      "bcbe1980652940ecb78fd05de9cb9653").replace("-", ""),
+    "07_語言釘庫":  os.environ.get("NOTION_DB_VERBAL",      "dc9851e2e6114231b01be85ef7afd9b5").replace("-", ""),
+    "35_IP型":      os.environ.get("NOTION_DB_IP_SCRIPT",   "efc0711ff4964eecb78fd05de9cb9653").replace("-", ""),
+    "35_導購型":    os.environ.get("NOTION_DB_SALES_SCRIPT", "461772ac895a4f8cb5a7f5305ecc521b").replace("-", ""),
 }
 
 # 修復缺陷4：統一使用 notion_visual_manual.md（與 manual_version_tracker.py 一致）

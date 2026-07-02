@@ -27,7 +27,7 @@ WHISPER_API_KEY = os.environ.get(
 )
 
 # Notion 資料庫 ID（02 爆款拆解庫）
-NOTION_DB_ID = "82097a06-fae5-83bd-a8c3-87236d3713aa"
+NOTION_DB_ID = os.environ.get("NOTION_DB_MAIN", "82097a06-fae5-83bd-a8c3-87236d3713aa")
 
 # Slack 設定（從 .env 讀取，人員異動時只需改 .env 不需動程式碼）
 # .env 路徑：/home/ubuntu/viral_factory/.env
