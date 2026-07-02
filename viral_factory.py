@@ -386,7 +386,7 @@ def write_to_notion_via_mcp(url: str, platform: str, transcript: str, analysis: 
     visual_design = analysis.get('視覺設計亮點', {})
     cta = analysis.get('CTA設計分析', {})
     boom_reason = analysis.get('爆款原因深度分析', {})
-    ad_potential = analysis.get('廣告投放潛力評估', {})
+    ad_potential_detail = analysis.get('廣告投放潛力評估', {})  # 詳細分析 dict，用於頁面內容
     industry = analysis.get('產業適用性分析', {})
     invalid = analysis.get('無效因素識別', [])
 
@@ -430,7 +430,7 @@ def write_to_notion_via_mcp(url: str, platform: str, transcript: str, analysis: 
         f"## 🎬 視覺設計亮點\n\n{fmt(visual_design)}\n\n"
         f"## 📣 CTA設計分析\n\n{fmt(cta)}\n\n"
         f"## 💥 爆款原因深度分析\n\n{fmt(boom_reason)}\n\n"
-        f"## 📊 廣告投放潛力評估\n\n{fmt(ad_potential)}\n\n"
+        f"## 📊 廣告投放潛力評估\n\n{fmt(ad_potential_detail)}\n\n"
         f"## 🏭 產業適用性分析\n\n{fmt(industry)}\n\n"
         f"## ⚠️ 無效因素識別\n\n{fmt(invalid)}\n\n"
         f"## 📝 逐字稿\n\n{transcript[:2000]}"
