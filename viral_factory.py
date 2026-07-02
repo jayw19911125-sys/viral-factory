@@ -460,7 +460,7 @@ def write_to_notion_via_mcp(url: str, platform: str, transcript: str, analysis: 
                     "平台": platform,
                     "爆款數據": analysis.get("爆款數據", "待補充"),
                     "熱門音樂": analysis.get("熱門音樂", "需人工補充"),
-                    "是否已借鏡": False,  # checkbox 用 bool
+                    "是否已借鏡": "__NO__",  # checkbox 用 __NO__ 字串（Notion MCP 格式）
                     "類別標籤": tags_json,
                     "來源類型": "Meta廣告（🌍英國）" if "facebook.com/ads" in url or "meta" in url.lower() or "MOCK_" in url else "有機熱門",
                     # 將內容塩入實際存在的文字欄位
