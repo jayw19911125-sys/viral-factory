@@ -2,7 +2,7 @@
 爆款短影音拆解工廠 - 每日排程主執行腳本 v3.0
 好創整合行銷 | 子權 2026-06-11
 
-執行方式：python3 /home/ubuntu/viral_factory/daily_run.py
+執行方式：python3 daily_run.py（於專案目錄下執行，路徑自動偵測）
 排程：每日 09:00（週一至週五）
 
 流程（雙來源系統）：
@@ -30,8 +30,11 @@ import logging
 from datetime import datetime
 from pathlib import Path
 
+# 動態計算路徑，避免硬編碼 /home/ubuntu 導致環境移植失敗
+BASE_DIR = Path(__file__).resolve().parent
+
 # 確保可以 import 同目錄的模組
-sys.path.insert(0, str(Path(__file__).parent))
+sys.path.insert(0, str(BASE_DIR))
 
 from trending_fetcher import get_daily_urls
 from viral_factory import process_batch
@@ -41,7 +44,7 @@ from script_distributor import distribute_video
 from manual_version_tracker import auto_detect_and_update
 
 # ─── 日誌設定 ─────────────────────────────────────────────
-LOG_DIR = Path("/home/ubuntu/viral_factory/logs")
+LOG_DIR = BASE_DIR / "logs"
 LOG_DIR.mkdir(exist_ok=True)
 
 today = datetime.now().strftime("%Y%m%d")
@@ -62,12 +65,12 @@ logger = logging.getLogger(__name__)
 
 def _check_env() -> bool:
     """啟動前驗證必要環境變數，避免執行到一半才報錯"""
-    required = {
-        "OPENAI_API_KEY": "用於 Whisper 轉錄與 GPT 拆解",
-    }
+    required = {}
     optional = {
+        # 轉錄已改用 manus-speech-to-text、GPT 走沙盒代理，OPENAI_API_KEY 已非必要
+        "OPENAI_API_KEY": "備用：直接呼叫 OpenAI API 時使用（目前主流程不需要）",
         "META_ACCESS_TOKEN": "用於 Meta 廣告庫拆取（缺少則僅有機內容）",
-        "WHISPER_AVAILABLE": "控制是否啟用 Whisper（預設 true）",
+        "WHISPER_AVAILABLE": "控制是否啟用轉錄（預設 true）",
     }
     all_ok = True
     for key, desc in required.items():
@@ -95,7 +98,7 @@ def main():
     # 環境變數驗證（必要 Key 缺少則中止）
     if not _check_env():
         logger.error("必要環境變數缺少，任務中止。請檢查 .env 檔案。")
-        return
+        raise RuntimeError("必要環境變數缺少，任務中止")
 
     # 判斷 Whisper 是否可用（OpenAI 額度）
     WHISPER_AVAILABLE = os.environ.get("WHISPER_AVAILABLE", "true").lower() == "true"
@@ -249,16 +252,14 @@ def main():
         raise
 
 
-if __name__ == "__main__":
-    main()
-
-    # 發送管理日報給子權
+def _send_management_report():
+    """發送管理日報給子權（無論主流程成功或失敗都執行）"""
     print("\n" + "="*50)
     print(f"📊 正在生成管理日報並發送至 Slack...")
     try:
         from management_report import generate_management_report
         from viral_factory import send_slack_dm
-        
+
         mgt_report = generate_management_report()
         # 發送到主頻道（從環境變數讀取，不硬編碼）
         send_slack_dm(mgt_report, channel=os.environ.get("SLACK_TEAM_CH", "C0AQG307XJT"))
@@ -266,3 +267,18 @@ if __name__ == "__main__":
     except Exception as e:
         print(f"  ⚠️ 管理日報發送失敗: {e}")
     print("="*50)
+
+
+if __name__ == "__main__":
+    exit_code = 0
+    try:
+        main()
+    except Exception as e:
+        # 不直接 re-raise：先確保管理日報一定送出，再以非零碼結束
+        logger.error(f"每日排程失敗：{e}", exc_info=True)
+        exit_code = 1
+    finally:
+        # 無論成功或失敗，管理日報一律發送
+        _send_management_report()
+
+    sys.exit(exit_code)

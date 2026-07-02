@@ -9,7 +9,7 @@ TikTok 9 個監控帳號
     ↓ 每日 09:00（台灣時間）
 trending_fetcher.py → 掃描最新影片，偵測 48 小時異常飆高
     ↓
-viral_factory.py → 下載音頻 → Whisper 轉文字 → GPT-4o 拆解
+viral_factory.py → 下載音頻 → manus-speech-to-text 轉文字 → GPT（gpt-4.1-mini）拆解
     ↓
 Notion 爆款拆解庫（ID：82097a06-fae5-83bd-a8c3-87236d3713aa）
     ↓
@@ -31,20 +31,25 @@ weekly_report.py → 跨影片規律分析 → Slack #all-團隊主頻道
 ## 執行方式
 
 ```bash
+# 於專案目錄下執行（路徑自動偵測，不需固定安裝位置）
+
 # 每日拆解（排程自動執行）
-python3 /home/ubuntu/viral_factory/daily_run.py
+python3 daily_run.py
 
 # 手動觸發單次拆解
-python3 /home/ubuntu/viral_factory/daily_run.py
+python3 daily_run.py
 
 # 手動觸發週報分析
-python3 /home/ubuntu/viral_factory/weekly_report.py
+python3 weekly_report.py
 ```
 
 ## 環境變數需求
 
 ```
-WHISPER_API_KEY=sk-proj-xxx   # OpenAI API Key（用於 Whisper 語音轉文字）
+# 語音轉文字使用沙盒內建 manus-speech-to-text，GPT（gpt-4.1-mini）走沙盒代理，
+# 皆不需要 OpenAI API Key。以下為選用：
+OPENAI_API_KEY=sk-proj-xxx    # 選用：直接呼叫 OpenAI API 時才需要
+META_ACCESS_TOKEN=xxx         # 選用：Meta 廣告庫抓取（缺少則僅拆解有機內容）
 ```
 
 ## 手動待拆清單

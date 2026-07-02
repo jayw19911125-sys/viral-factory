@@ -1,8 +1,10 @@
 #!/bin/bash
 # 載入 viral-factory .env 環境變數
-# 用法：source /home/ubuntu/viral_factory/load_env.sh
+# 用法：source <專案目錄>/load_env.sh（路徑自動偵測，不需硬編碼）
 
-ENV_FILE="/home/ubuntu/viral_factory/.env"
+# 動態計算腳本所在目錄，避免硬編碼 /home/ubuntu 導致環境移植失敗
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]:-$0}")" && pwd)"
+ENV_FILE="$SCRIPT_DIR/.env"
 
 if [ -f "$ENV_FILE" ]; then
     while IFS='=' read -r key value; do

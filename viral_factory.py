@@ -1,9 +1,9 @@
 """爆款短影音拆解工廠 v3.0
 好創整合行銷 | 子權 2026-06-10
 
-流程：影片連結 → yt-dlp 下載 → Whisper 轉文字 → GPT-4o 拆解 → Notion MCP 寫入 → Slack MCP 通知
-架構：Whisper 用子權的 OpenAI Key（直接呼叫 api.openai.com）
-      GPT-4o 用沙盒免費代理（api.manus.im）
+流程：影片連結 → yt-dlp 下載 → manus-speech-to-text 轉文字 → GPT（gpt-4.1-mini）拆解 → Notion MCP 寫入 → Slack MCP 通知
+架構：轉錄用 manus-speech-to-text（沙盒內建工具，不需要 OpenAI Key）
+      GPT（gpt-4.1-mini）用沙盒免費代理（api.manus.im）
       Notion / Slack 用 MCP 工具（不需要額外 Key）
 """
 
@@ -26,11 +26,14 @@ WHISPER_API_KEY = os.environ.get(
     os.environ.get("OPENAI_API_KEY", "")
 )
 
+# 動態計算路徑，避免硬編碼 /home/ubuntu 導致環境移植失敗
+BASE_DIR = Path(__file__).resolve().parent
+
 # Notion 資料庫 ID（02 爆款拆解庫）
 NOTION_DB_ID = os.environ.get("NOTION_DB_MAIN", "82097a06-fae5-83bd-a8c3-87236d3713aa")
 
 # Slack 設定（從 .env 讀取，人員異動時只需改 .env 不需動程式碼）
-# .env 路徑：/home/ubuntu/viral_factory/.env
+# .env 路徑：<專案目錄>/.env
 SLACK_AWEI_ID    = os.environ.get("SLACK_AWEI_ID",    "U0B4FG0ER89")   # 阿韋 User ID
 SLACK_XINXIN_ID  = os.environ.get("SLACK_XINXIN_ID",  "U0BA2DKQ7GF")   # 小鑫 User ID
 SLACK_TEAM_CH    = os.environ.get("SLACK_TEAM_CH",    "C0AQG307XJT")   # #all-團隊主頻道
@@ -570,9 +573,9 @@ def write_to_notion_via_mcp(url: str, platform: str, transcript: str, analysis: 
 def _save_to_local_queue(payload: dict, url: str) -> str:
     """
     Notion MCP 未啟用時，將拆解結果存到本地 JSON 佇列
-    路徑：/home/ubuntu/viral_factory/data/notion_queue.json
+    路徑：<專案目錄>/data/notion_queue.json
     """
-    queue_file = Path("/home/ubuntu/viral_factory/data/notion_queue.json")
+    queue_file = BASE_DIR / "data" / "notion_queue.json"
     queue_file.parent.mkdir(parents=True, exist_ok=True)
 
     queue = []
@@ -842,7 +845,8 @@ def process_batch(urls: list, whisper_available: bool = True) -> list:
     send_slack_dm("\n".join(lines), channel=SLACK_AUTO_CH)
 
     # 子權健康版 DM
-    SLACK_DENNIS_ID = os.environ.get('SLACK_DENNIS_ID', 'U07MHPJKQ8V')
+    # 已驗證：Dennis（黃子權，COO）的 Slack User ID 為 U0ARRQS3XPS（經 Slack 使用者搜尋確認）
+    SLACK_DENNIS_ID = os.environ.get('SLACK_DENNIS_ID', 'U0ARRQS3XPS')
     fail_rate = fail_count / (len(results) or 1) * 100
     health_lines = [
         f"🛡️ *系統健康摘要* | {today}",
