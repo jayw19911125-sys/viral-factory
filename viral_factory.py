@@ -465,12 +465,22 @@ def write_to_notion_via_mcp(url: str, platform: str, transcript: str, analysis: 
         ]
     }
 
+    # 寫入 Notion（用 --input-file 避免 shell 轉義問題）
+    import tempfile as _tf
+    with _tf.NamedTemporaryFile(mode='w', suffix='.json', delete=False, encoding='utf-8') as _f:
+        json.dump(payload, _f, ensure_ascii=False)
+        _input_file = _f.name
+
     cmd = [
         "manus-mcp-cli", "tool", "call", "notion-create-pages",
         "--server", "notion",
-        "--input", json.dumps(payload, ensure_ascii=False)
+        "--input-file", _input_file
     ]
     result = subprocess.run(cmd, capture_output=True, text=True, timeout=60)
+    try:
+        os.unlink(_input_file)
+    except Exception:
+        pass
 
     if result.returncode != 0:
         err_msg = result.stderr[:300]
@@ -479,14 +489,60 @@ def write_to_notion_via_mcp(url: str, platform: str, transcript: str, analysis: 
             return _save_to_local_queue(payload, url)
         raise RuntimeError(f"Notion 寫入失敗：{err_msg}")
 
-    # 嘗試解析回傳的頁面 URL
+    # ── 解析回傳的頁面 URL ──────────────────────────────────────
+    # stdout 格式：
+    #   Tool execution result saved to: /path/to/file\n
+    #   Tool execution result:\n
+    #   {JSON}
+    # 用 rfind 取「最後一個」marker 之後的 JSON，避免多段輸出干擾
     try:
-        output = result.stdout.split("Tool execution result:\n")[-1].strip()
-        data = json.loads(output)
+        raw = result.stdout
+        marker = "Tool execution result:\n"
+        idx = raw.rfind(marker)
+        if idx != -1:
+            json_str = raw[idx + len(marker):].strip()
+        else:
+            # fallback：找第一個 '{' 開始的行
+            json_str = ""
+            for line in raw.split("\n"):
+                line = line.strip()
+                if line.startswith("{"):
+                    json_str = line
+                    break
+
+        if not json_str:
+            raise ValueError("找不到 JSON 輸出")
+
+        data = json.loads(json_str)
+        # Notion API 回傳格式：{"pages": [{"url": "...", "id": "..."}]}
         pages = data.get("pages", [])
-        return pages[0].get("url", "https://notion.so") if pages else "https://notion.so"
-    except Exception:
-        return "https://notion.so"
+        if pages and isinstance(pages, list):
+            page_url = pages[0].get("url", "")
+            if page_url and page_url.startswith("http"):
+                print(f"  ✅ 02｜爆款拆解庫 入庫成功：{page_url}")
+                return page_url
+
+        # 有時 API 回傳 {"id": "xxx", "url": "..."}（單頁格式）
+        single_url = data.get("url", "")
+        if single_url and single_url.startswith("http"):
+            print(f"  ✅ 02｜爆款拆解庫 入庫成功：{single_url}")
+            return single_url
+
+        # 嘗試從 id 建構 URL
+        page_id = (pages[0].get("id", "") if pages else "") or data.get("id", "")
+        if page_id:
+            clean_id = page_id.replace("-", "")
+            constructed_url = f"https://notion.so/{clean_id}"
+            print(f"  ✅ 02｜爆款拆解庫 入庫成功（URL 由 ID 建構）：{constructed_url}")
+            return constructed_url
+
+        print(f"  ⚠️  Notion 頁面已建立但無法取得 URL，原始輸出：{raw[:200]}")
+        return "https://notion.so/82097a06fae583bda8c387236d3713aa"
+
+    except Exception as e:
+        print(f"  ⚠️  Notion URL 解析失敗（頁面可能已建立）：{e}")
+        print(f"      stdout 前 300 字：{result.stdout[:300]}")
+        return "https://notion.so/82097a06fae583bda8c387236d3713aa"
 
 
 def _save_to_local_queue(payload: dict, url: str) -> str:
@@ -639,7 +695,7 @@ def process_single_video(url: str, whisper_available: bool = True) -> dict:
                 f"✅ *本週可用選題：*\n{topic}\n\n"
                 f"📝 *可套用開場白公式：*\n{formula}\n\n"
                 f"🎯 *適合哪類客戶：*\n{client_fit}\n\n"
-                f"📚 完整拆解分析 → {notion_url}"
+                f"📚 *已入庫：02｜爆款拆解庫*\n{notion_url}"
             )
 
             # 剪輯師版通知（阿韋）
@@ -664,7 +720,7 @@ def process_single_video(url: str, whisper_available: bool = True) -> dict:
                 f"🎵 *音效與音樂建議：*\n{audio_tip}\n\n"
                 f"🎶 *熱門音樂趨勢：*\n{music_trend}\n\n"
                 f"✂️ *剪輯技巧建議：*\n{edit_tips}\n\n"
-                f"📚 完整拆解分析 → {notion_url}"
+                f"📚 *已入庫：02｜爆款拆解庫*\n{notion_url}"
             )
 
             # 發送兩則分角色通知，並記錄送達狀態
@@ -688,7 +744,8 @@ def process_single_video(url: str, whisper_available: bool = True) -> dict:
                 "url": url,
                 "video_type": analysis.get("影片類型", ""),
                 "score": analysis.get("score", 0),
-                "analysis": analysis
+                "analysis": analysis,
+                "library_urls": {}  # 由 daily_run.py 的 distribute_video 填入
             }
 
     except Exception as e:
@@ -735,8 +792,14 @@ def process_batch(urls: list, whisper_available: bool = True) -> list:
     for i, r in enumerate(success_items, 1):
         vtype = r.get('video_type', '')
         score = r.get('score', '-')
+        notion_url_item = r.get('notion_url', '')
         lines.append(f"{i}. [{r.get('platform','')}][{vtype}] {r.get('title','')} ★{score}")
-        lines.append(f"   → {r.get('notion_url','')}")
+        lines.append(f"   📚 02｜爆款拆解庫 → {notion_url_item}")
+        # 附上素材庫分配狀態
+        lib_urls = r.get('library_urls', {})
+        if lib_urls:
+            lib_summary = ' | '.join([f"{k}✓" for k, v in lib_urls.items() if v])
+            lines.append(f"   📦 素材庫：{lib_summary}")
     send_slack_dm("\n".join(lines), channel=SLACK_AUTO_CH)
 
     # 子權健康版 DM

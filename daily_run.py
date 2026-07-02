@@ -131,7 +131,19 @@ def main():
             source_url = result.get("url", "")
 
             try:
-                score_result = distribute_video(analysis, source_url)
+                dist_result = distribute_video(analysis, source_url)
+
+                # distribute_video 新版回傳 {score_result, library_urls}
+                if isinstance(dist_result, dict) and "score_result" in dist_result:
+                    score_result = dist_result["score_result"]
+                    library_urls = dist_result.get("library_urls", {})
+                else:
+                    # 舊版相容（直接回傳 score_result）
+                    score_result = dist_result
+                    library_urls = {}
+
+                # 把庫房連結寫回 result，讓 process_batch 的日報可以用
+                result["library_urls"] = library_urls
 
                 # 統計評分
                 score = score_result.get("score", 0)
@@ -154,9 +166,11 @@ def main():
                 if score >= 4:
                     high_score_count += 1
 
+                lib_summary = ' | '.join([f"{k}" for k in library_urls.keys()]) if library_urls else "無"
                 logger.info(
                     f"[✓] 分配完成：{analysis.get('title', '')[:30]} | "
-                    f"{score_result.get('score_label')} | {content_type}"
+                    f"{score_result.get('score_label')} | {content_type} | "
+                    f"素材庫：{lib_summary}"
                 )
 
             except Exception as e:

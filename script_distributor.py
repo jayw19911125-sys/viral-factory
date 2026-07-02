@@ -16,6 +16,7 @@ script_distributor.py
 import os
 import json
 import subprocess
+import tempfile
 from script_scorer import score_video, is_high_score
 
 # Notion 庫房 ID 對照表（真實 ID，已從 Notion 搜尋確認）
@@ -30,25 +31,112 @@ NOTION_DB_IDS = {
     "導購型腳本庫": "461772ac-895a-4f8c-b5a7-f5305ecc521b", # 35 子庫
 }
 
+# 庫房顯示名稱（用於 Slack 通知）
+LIBRARY_DISPLAY = {
+    "開頭鉤子庫": "03｜開頭鉤子庫",
+    "結尾呼籲庫": "04｜結尾呼籲庫",
+    "腳本結構庫": "05｜腳本結構庫",
+    "視覺錘庫": "06｜視覺錘庫",
+    "語言釘庫": "07｜語言釘庫",
+    "IP型腳本庫": "35｜IP型腳本庫",
+    "導購型腳本庫": "35｜導購型腳本庫",
+}
 
-def call_notion_mcp(tool_name: str, input_data: dict) -> dict:
-    """呼叫 Notion MCP 工具"""
+
+def _parse_notion_url(stdout: str, db_key: str) -> str:
+    """
+    解析 manus-mcp-cli 的 stdout，取得 Notion 頁面 URL
+    stdout 格式：
+      Tool execution result saved to: /path/to/file
+      Tool execution result:
+      {JSON}
+    回傳真實 URL 或由 ID 建構的 URL，失敗時回傳庫房首頁 URL
+    """
+    db_id = NOTION_DB_IDS.get(db_key, "")
+    fallback_url = f"https://notion.so/{db_id.replace('-', '')}" if db_id else "https://notion.so"
+
+    try:
+        raw = stdout
+        marker = "Tool execution result:\n"
+        idx = raw.rfind(marker)
+        if idx != -1:
+            json_str = raw[idx + len(marker):].strip()
+        else:
+            # fallback：找第一個 '{' 開始的行
+            json_str = ""
+            for line in raw.split("\n"):
+                line = line.strip()
+                if line.startswith("{"):
+                    json_str = line
+                    break
+
+        if not json_str:
+            return fallback_url
+
+        data = json.loads(json_str)
+
+        # 格式一：{"pages": [{"url": "...", "id": "..."}]}
+        pages = data.get("pages", [])
+        if pages and isinstance(pages, list):
+            page_url = pages[0].get("url", "")
+            if page_url and page_url.startswith("http"):
+                return page_url
+            # 從 id 建構
+            page_id = pages[0].get("id", "")
+            if page_id:
+                return f"https://notion.so/{page_id.replace('-', '')}"
+
+        # 格式二：{"url": "...", "id": "..."}（單頁格式）
+        single_url = data.get("url", "")
+        if single_url and single_url.startswith("http"):
+            return single_url
+
+        page_id = data.get("id", "")
+        if page_id:
+            return f"https://notion.so/{page_id.replace('-', '')}"
+
+    except Exception:
+        pass
+
+    return fallback_url
+
+
+def call_notion_mcp(tool_name: str, input_data: dict, db_key: str = "") -> dict:
+    """
+    呼叫 Notion MCP 工具，回傳 {success, url, raw_output}
+    使用 --input-file 避免 shell 轉義問題
+    """
+    # 寫入臨時 JSON 檔案
+    with tempfile.NamedTemporaryFile(mode='w', suffix='.json', delete=False, encoding='utf-8') as f:
+        json.dump(input_data, f, ensure_ascii=False)
+        input_file = f.name
+
     cmd = [
         "manus-mcp-cli", "tool", "call", tool_name,
         "--server", "notion",
-        "--input", json.dumps(input_data, ensure_ascii=False)
+        "--input-file", input_file
     ]
     try:
         result = subprocess.run(cmd, capture_output=True, text=True, timeout=30)
-        output = result.stdout + result.stderr
-        # 找到 JSON 結果
-        for line in output.split("\n"):
-            if line.startswith("{") or line.startswith("["):
-                return json.loads(line)
-        return {"success": True, "output": output}
+        try:
+            os.unlink(input_file)
+        except Exception:
+            pass
+
+        if result.returncode != 0:
+            print(f"[MCP 呼叫失敗] {tool_name}: {result.stderr[:200]}")
+            return {"success": False, "url": "", "error": result.stderr[:200]}
+
+        page_url = _parse_notion_url(result.stdout, db_key)
+        return {"success": True, "url": page_url, "raw_output": result.stdout[:500]}
+
     except Exception as e:
-        print(f"[MCP 呼叫失敗] {tool_name}: {e}")
-        return {"error": str(e)}
+        try:
+            os.unlink(input_file)
+        except Exception:
+            pass
+        print(f"[MCP 呼叫異常] {tool_name}: {e}")
+        return {"success": False, "url": "", "error": str(e)}
 
 
 def _get_nested(analysis: dict, *keys, default=""):
@@ -62,8 +150,8 @@ def _get_nested(analysis: dict, *keys, default=""):
     return val if val is not None else default
 
 
-def write_to_hook_library(analysis: dict, source_url: str):
-    """將鉤子公式寫入 03｜開頭鉤子庫"""
+def write_to_hook_library(analysis: dict, source_url: str) -> str:
+    """將鉤子公式寫入 03｜開頭鉤子庫，回傳頁面 URL"""
     hook_data = analysis.get("鉤子類型與設計", {})
     hook_type = _get_nested(hook_data, "鉤子類型") or analysis.get("鉤子大類", "")
     hook_formula = _get_nested(hook_data, "可套用公式") or _get_nested(hook_data, "鉤子公式", "")
@@ -74,7 +162,7 @@ def write_to_hook_library(analysis: dict, source_url: str):
     neuroscience = analysis.get("神經科學機制", "")
 
     if not hook_formula and not hook_type:
-        return
+        return ""
 
     content = f"""# {hook_type}｜{str(hook_formula)[:30]}
 
@@ -88,17 +176,21 @@ def write_to_hook_library(analysis: dict, source_url: str):
 ## 使用說明
 {hook_design}
 """
-    call_notion_mcp("notion-create-pages", {
+    res = call_notion_mcp("notion-create-pages", {
         "data_source_id": NOTION_DB_IDS["開頭鉤子庫"],
-        "pages": [{
-            "content": content
-        }]
-    })
-    print(f"[✓] 鉤子公式已寫入 03 庫：{hook_type}")
+        "pages": [{"content": content}]
+    }, db_key="開頭鉤子庫")
+
+    page_url = res.get("url", "")
+    if res.get("success"):
+        print(f"[✓] 鉤子公式已寫入 03｜開頭鉤子庫：{hook_type} → {page_url}")
+    else:
+        print(f"[✗] 03 庫寫入失敗：{res.get('error', '')}")
+    return page_url
 
 
-def write_to_cta_library(analysis: dict, source_url: str):
-    """將 CTA 公式寫入 04｜結尾呼籲庫"""
+def write_to_cta_library(analysis: dict, source_url: str) -> str:
+    """將 CTA 公式寫入 04｜結尾呼籲庫，回傳頁面 URL"""
     cta_data = analysis.get("CTA設計分析", {})
     cta_type = _get_nested(cta_data, "CTA類型") or analysis.get("CTA類型", "")
     cta_design = _get_nested(cta_data, "設計分析") or _get_nested(cta_data, "CTA設計", "")
@@ -106,7 +198,7 @@ def write_to_cta_library(analysis: dict, source_url: str):
     industry = _get_nested(industry_data, "原始產業") or "通用"
 
     if not cta_design and not cta_type:
-        return
+        return ""
 
     content = f"""# {cta_type}｜{industry}
 
@@ -115,15 +207,21 @@ def write_to_cta_library(analysis: dict, source_url: str):
 **適用產業**：{industry}
 **來源影片**：{source_url}
 """
-    call_notion_mcp("notion-create-pages", {
+    res = call_notion_mcp("notion-create-pages", {
         "data_source_id": NOTION_DB_IDS["結尾呼籲庫"],
         "pages": [{"content": content}]
-    })
-    print(f"[✓] CTA公式已寫入 04 庫：{cta_type}")
+    }, db_key="結尾呼籲庫")
+
+    page_url = res.get("url", "")
+    if res.get("success"):
+        print(f"[✓] CTA公式已寫入 04｜結尾呼籲庫：{cta_type} → {page_url}")
+    else:
+        print(f"[✗] 04 庫寫入失敗：{res.get('error', '')}")
+    return page_url
 
 
-def write_to_structure_library(analysis: dict, source_url: str):
-    """將腳本結構寫入 05｜腳本結構庫"""
+def write_to_structure_library(analysis: dict, source_url: str) -> str:
+    """將腳本結構寫入 05｜腳本結構庫，回傳頁面 URL"""
     structure_data = analysis.get("影片結構拆解", {})
     script_structure = _get_nested(structure_data, "結構公式") or str(structure_data) if structure_data else ""
     industry_data = analysis.get("產業適用性分析", {})
@@ -131,7 +229,7 @@ def write_to_structure_library(analysis: dict, source_url: str):
     platform = analysis.get("平台", "") or analysis.get("platform", "")
 
     if not script_structure:
-        return
+        return ""
 
     content = f"""# {industry}｜{platform} 腳本結構
 
@@ -142,15 +240,21 @@ def write_to_structure_library(analysis: dict, source_url: str):
 **平台**：{platform}
 **來源影片**：{source_url}
 """
-    call_notion_mcp("notion-create-pages", {
+    res = call_notion_mcp("notion-create-pages", {
         "data_source_id": NOTION_DB_IDS["腳本結構庫"],
         "pages": [{"content": content}]
-    })
-    print(f"[✓] 腳本結構已寫入 05 庫：{industry}")
+    }, db_key="腳本結構庫")
+
+    page_url = res.get("url", "")
+    if res.get("success"):
+        print(f"[✓] 腳本結構已寫入 05｜腳本結構庫：{industry} → {page_url}")
+    else:
+        print(f"[✗] 05 庫寫入失敗：{res.get('error', '')}")
+    return page_url
 
 
-def write_to_visual_hammer_library(analysis: dict, source_url: str):
-    """將視覺錘分析寫入 06｜視覺錘庫"""
+def write_to_visual_hammer_library(analysis: dict, source_url: str) -> str:
+    """將視覺錘分析寫入 06｜視覺錘庫，回傳頁面 URL"""
     visual_data = analysis.get("視覺錘分析", {})
     visual_hammer_type = analysis.get("視覺錘類型", "") or _get_nested(visual_data, "視覺錘是什麼", "")
     visual_analysis = _get_nested(visual_data, "視覺錘是什麼") or str(visual_data) if visual_data else ""
@@ -159,7 +263,7 @@ def write_to_visual_hammer_library(analysis: dict, source_url: str):
     industry = _get_nested(industry_data, "原始產業") or "通用"
 
     if not visual_analysis:
-        return
+        return ""
 
     content = f"""# {visual_hammer_type}｜{industry}
 
@@ -169,22 +273,28 @@ def write_to_visual_hammer_library(analysis: dict, source_url: str):
 **適用產業**：{industry}
 **來源影片**：{source_url}
 """
-    call_notion_mcp("notion-create-pages", {
+    res = call_notion_mcp("notion-create-pages", {
         "data_source_id": NOTION_DB_IDS["視覺錘庫"],
         "pages": [{"content": content}]
-    })
-    print(f"[✓] 視覺錘已寫入 06 庫：{visual_hammer_type}")
+    }, db_key="視覺錘庫")
+
+    page_url = res.get("url", "")
+    if res.get("success"):
+        print(f"[✓] 視覺錘已寫入 06｜視覺錘庫：{visual_hammer_type} → {page_url}")
+    else:
+        print(f"[✗] 06 庫寫入失敗：{res.get('error', '')}")
+    return page_url
 
 
-def write_to_language_nail_library(analysis: dict, source_url: str):
-    """將語言釘公式寫入 07｜語言釘庫"""
+def write_to_language_nail_library(analysis: dict, source_url: str) -> str:
+    """將語言釘公式寫入 07｜語言釘庫，回傳頁面 URL"""
     visual_data = analysis.get("視覺錘分析", {})
     language_nail = _get_nested(visual_data, "語言釘是什麼", "")
     industry_data = analysis.get("產業適用性分析", {})
     industry = _get_nested(industry_data, "原始產業") or "通用"
 
     if not language_nail:
-        return
+        return ""
 
     content = f"""# {industry}｜語言釘公式
 
@@ -192,15 +302,21 @@ def write_to_language_nail_library(analysis: dict, source_url: str):
 **適用產業**：{industry}
 **來源影片**：{source_url}
 """
-    call_notion_mcp("notion-create-pages", {
+    res = call_notion_mcp("notion-create-pages", {
         "data_source_id": NOTION_DB_IDS["語言釘庫"],
         "pages": [{"content": content}]
-    })
-    print(f"[✓] 語言釘已寫入 07 庫：{language_nail[:30]}")
+    }, db_key="語言釘庫")
+
+    page_url = res.get("url", "")
+    if res.get("success"):
+        print(f"[✓] 語言釘已寫入 07｜語言釘庫：{language_nail[:30]} → {page_url}")
+    else:
+        print(f"[✗] 07 庫寫入失敗：{res.get('error', '')}")
+    return page_url
 
 
-def write_to_script_library(analysis: dict, score_result: dict, source_url: str):
-    """將高分影片（4-5分）的腳本寫入 35｜已驗證熱門腳本庫"""
+def write_to_script_library(analysis: dict, score_result: dict, source_url: str) -> str:
+    """將高分影片（4-5分）的腳本寫入 35｜已驗證熱門腳本庫，回傳頁面 URL"""
     content_type = score_result.get("content_type", "IP型")
     db_key = "IP型腳本庫" if content_type == "IP型" else "導購型腳本庫"
     db_id = NOTION_DB_IDS[db_key]
@@ -264,23 +380,41 @@ def write_to_script_library(analysis: dict, score_result: dict, source_url: str)
         if ad_potential in ["A級直接可投", "B級小改可投"]:
             properties["廣告投放潛力"] = ad_potential
 
-    call_notion_mcp("notion-create-pages", {
+    res = call_notion_mcp("notion-create-pages", {
         "data_source_id": db_id,
         "pages": [{
             "content": content,
             "properties": properties
         }]
-    })
-    print(f"[✓] 高分腳本已寫入 35 庫（{content_type}）：{title[:30]}")
+    }, db_key=db_key)
+
+    page_url = res.get("url", "")
+    display_name = LIBRARY_DISPLAY.get(db_key, "35｜腳本庫")
+    if res.get("success"):
+        print(f"[✓] 高分腳本已寫入 {display_name}（{content_type}）：{title[:30]} → {page_url}")
+    else:
+        print(f"[✗] 35 庫寫入失敗：{res.get('error', '')}")
+    return page_url
 
 
-def distribute_video(analysis: dict, source_url: str = ""):
+def distribute_video(analysis: dict, source_url: str = "") -> dict:
     """
     主函數：接收一支影片的完整拆解結果，分配到所有對應庫房
     analysis 是 viral_factory.py 的 GPT 拆解輸出
+
+    回傳：{
+        "score_result": {...},
+        "library_urls": {
+            "03｜開頭鉤子庫": "https://...",
+            "04｜結尾呼籲庫": "https://...",
+            ...
+        }
+    }
     """
     title_display = analysis.get("影片標題或主題", "") or analysis.get("title", "未命名")
     print(f"\n[分配開始] {title_display}")
+
+    library_urls = {}
 
     # Step 1：評分
     hook_data = analysis.get("鉤子類型與設計", {})
@@ -298,21 +432,42 @@ def distribute_video(analysis: dict, source_url: str = ""):
     })
     print(f"[評分] {score_result.get('score_label')} | {score_result.get('content_type')} | {score_result.get('score_reason')}")
 
-    # Step 2：無論評分高低，都寫入各素材庫
-    write_to_hook_library(analysis, source_url)
-    write_to_cta_library(analysis, source_url)
-    write_to_structure_library(analysis, source_url)
-    write_to_visual_hammer_library(analysis, source_url)
-    write_to_language_nail_library(analysis, source_url)
+    # Step 2：無論評分高低，都寫入各素材庫（收集每個庫的真實 URL）
+    url_03 = write_to_hook_library(analysis, source_url)
+    if url_03:
+        library_urls["03｜開頭鉤子庫"] = url_03
+
+    url_04 = write_to_cta_library(analysis, source_url)
+    if url_04:
+        library_urls["04｜結尾呼籲庫"] = url_04
+
+    url_05 = write_to_structure_library(analysis, source_url)
+    if url_05:
+        library_urls["05｜腳本結構庫"] = url_05
+
+    url_06 = write_to_visual_hammer_library(analysis, source_url)
+    if url_06:
+        library_urls["06｜視覺錘庫"] = url_06
+
+    url_07 = write_to_language_nail_library(analysis, source_url)
+    if url_07:
+        library_urls["07｜語言釘庫"] = url_07
 
     # Step 3：只有高分（4-5分）才寫入 35 號腳本庫
     if is_high_score(score_result):
-        write_to_script_library(analysis, score_result, source_url)
+        url_35 = write_to_script_library(analysis, score_result, source_url)
+        if url_35:
+            content_type = score_result.get("content_type", "IP型")
+            lib_key = "35｜IP型腳本庫" if content_type == "IP型" else "35｜導購型腳本庫"
+            library_urls[lib_key] = url_35
         print(f"[✓] 高分影片，已寫入 35｜已驗證熱門腳本庫")
     else:
         print(f"[跳過] 評分 {score_result.get('score')} 分，不寫入腳本庫")
 
-    return score_result
+    return {
+        "score_result": score_result,
+        "library_urls": library_urls
+    }
 
 
 if __name__ == "__main__":
@@ -337,4 +492,7 @@ if __name__ == "__main__":
         "neuroscience": "好奇心缺口 + 損失厭惡",
     }
     result = distribute_video(test_analysis, "https://www.tiktok.com/test")
-    print(f"\n最終評分結果：{json.dumps(result, ensure_ascii=False, indent=2)}")
+    print(f"\n最終評分結果：{json.dumps(result['score_result'], ensure_ascii=False, indent=2)}")
+    print(f"\n庫房入庫連結：")
+    for lib, url in result['library_urls'].items():
+        print(f"  {lib} → {url}")
