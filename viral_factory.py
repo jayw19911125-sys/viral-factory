@@ -341,13 +341,23 @@ def write_to_notion_via_mcp(url: str, platform: str, transcript: str, analysis: 
         INDUSTRY_TO_NOTION.get(t, "其他") for t in raw_tags
         if INDUSTRY_TO_NOTION.get(t, "其他") in NOTION_VALID_TAGS
     )) or ["其他"]
-    tags_json = json.dumps(tags, ensure_ascii=False)
+    tags_json = ",".join(tags)  # Notion MCP multi_select 用逗號分隔字串
 
     # 結構化標籤欄位（對應 Notion 選項）
     valid_hook_types = ["疑問式", "否定式", "衝突式", "數字式", "警告式", "揭秘式", "前後對比式", "大膽宣言式"]
     valid_visual_hammer = ["道具型", "構圖型", "色彩型", "字幕型", "人物型", "場景型", "動作型"]
     valid_cta_types = ["留言誘餌", "私訊獲取", "追蹤鉤子", "到店導流", "加LINE", "預約", "點連結購買", "填表單"]
     valid_neuro = ["杏仁核劫持", "多巴胺預期", "鏡像神經元", "認知失調", "損失厭惡", "社交認同"]
+    # GPT 常見輸出的別名映射到 Notion 合法選項
+    NEURO_ALIAS = {
+        "好奇心缺口": "多巴胺預期",  # 好奇心 → 多巴胺預期
+        "恐懼訴求": "杏仁核劫持",
+        "情緒共鳴": "鏡像神經元",
+        "認同感": "社交認同",
+        "從眾心理": "社交認同",
+        "错误認知": "認知失調",
+        "欲望預期": "多巴胺預期",
+    }
     valid_ad_potential = ["A級直接可投", "B級小改可投", "C級需大改", "不適合投廣告"]
 
     hook_type = analysis.get("鉤子大類", "")
@@ -360,6 +370,7 @@ def write_to_notion_via_mcp(url: str, platform: str, transcript: str, analysis: 
     cta_type = cta_type if cta_type in valid_cta_types else None
 
     neuro_type = analysis.get("神經科學機制", "")
+    neuro_type = NEURO_ALIAS.get(neuro_type, neuro_type)  # 別名映射
     neuro_type = neuro_type if neuro_type in valid_neuro else None
 
     ad_potential = analysis.get("廣告投放潛力", "")
@@ -443,18 +454,18 @@ def write_to_notion_via_mcp(url: str, platform: str, transcript: str, analysis: 
                 "icon": "🔥",
                 "content": content,
                 "properties": {
+                    # 根據 Notion 02 庫實際欄位名稱對滝
                     "影片標題或主題": title,
                     "原始連結": url,
                     "平台": platform,
                     "爆款數據": analysis.get("爆款數據", "待補充"),
                     "熱門音樂": analysis.get("熱門音樂", "需人工補充"),
-                    "是否已借鏡": "__NO__",
+                    "是否已借鏡": False,  # checkbox 用 bool
                     "類別標籤": tags_json,
                     "來源類型": "Meta廣告（🌍英國）" if "facebook.com/ads" in url or "meta" in url.lower() or "MOCK_" in url else "有機熱門",
-                    "影片類型": video_type_val,
-                    "本週可用選題": planner_topic[:200] if planner_topic else "",
-                    "可套用開場白公式": planner_formula[:200] if planner_formula else "",
-                    "適合哪類客戶": planner_client[:200] if planner_client else "",
+                    # 將內容塩入實際存在的文字欄位
+                    "開頭鉤子拆解": planner_formula[:200] if planner_formula else "",
+                    "為什麼會爆": str(analysis.get("為什麼會爆款", ""))[:200],
                     **({"鉤子大類": hook_type} if hook_type else {}),
                     **({"視覺錘類型": visual_hammer_type} if visual_hammer_type else {}),
                     **({"CTA類型": cta_type} if cta_type else {}),
