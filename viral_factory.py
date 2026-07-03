@@ -272,7 +272,8 @@ def analyze_with_gpt4o(transcript: str, platform: str, url: str) -> dict:
         model="gpt-4.1-mini",  # 沙盒可用模型
         messages=[{"role": "user", "content": prompt}],
         response_format={"type": "json_object"},
-        temperature=0.3
+        temperature=0.3,
+        max_tokens=4000,  # 限制輸出長度，避免超長輸出浪費 token
     )
     # 沙盒代理在模型不支援時會回傳 error 欄位而非 choices
     if response.choices is None:

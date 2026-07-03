@@ -293,8 +293,18 @@ def write_to_language_nail_library(analysis: dict, source_url: str) -> str:
     industry_data = analysis.get("產業適用性分析", {})
     industry = _get_nested(industry_data, "原始產業") or "通用"
 
+    # Fallback：沒有語言釘時，改用鉤子語句或影片標題作為語言釘
     if not language_nail:
-        return ""
+        hook_data = analysis.get("鉤子分析", {})
+        hook_sentence = _get_nested(hook_data, "鉤子原句", "")
+        if hook_sentence:
+            language_nail = hook_sentence[:50]  # 鉤子句取前50字
+        else:
+            title = analysis.get("影片標題或主題", "")
+            if title:
+                language_nail = title[:50]
+            else:
+                return ""  # 完全沒有可用內容，才跳過
 
     content = f"""# {industry}｜語言釘公式
 

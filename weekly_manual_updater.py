@@ -48,7 +48,11 @@ MANUAL_PATH = BASE_DIR / "notion_visual_manual.md"
 PDF_PATH    = BASE_DIR / "爆款短影音拆解工廠v3.0_團隊操作手冊.pdf"
 DATA_DIR    = BASE_DIR / "data"
 
-client = OpenAI()
+# 使用沙盒免費代理（與 viral_factory.py 一致），避免消耗子權的 OpenAI 額度
+client = OpenAI(
+    api_key=os.environ.get("OPENAI_API_KEY", ""),
+    base_url=os.environ.get("OPENAI_API_BASE", "https://api.openai.com/v1")
+)
 
 # ─── 工具函數 ─────────────────────────────────────────────
 

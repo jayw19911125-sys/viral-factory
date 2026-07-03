@@ -1,20 +1,90 @@
 {
-  "version": "3.5.0",
+  "version": "3.10.0",
   "major": 3,
-  "minor": 5,
+  "minor": 10,
   "patch": 0,
-  "last_updated": "2026-06-30 09:30",
+  "last_updated": "2026-07-03 09:21",
   "file_hashes": {
-    "viral_factory.py": "da0079c2ff4b759992211709e5c5b932",
+    "viral_factory.py": "0e4cc402f6ff31221107d27d8aa5a75b",
     "meta_ads_fetcher.py": "b2ba50e81a7231ef4f29a4965df53203",
-    "script_scorer.py": "5a48206cef214d7ca161a56373b24555",
-    "script_distributor.py": "58a3a809b16152338c36132887495629",
-    "daily_run.py": "19641fc37fb5724fa3ccd4545ecaf509",
-    "weekly_report.py": "3c3384509d74832516a160136fd38c00",
-    "weekly_manual_updater.py": "ba0eb0518210bb84e86d1663787b9a6b",
+    "script_scorer.py": "997b3cda8d301b7e0b1103522d295832",
+    "script_distributor.py": "586895abf23948f5517b6cc9a45821b8",
+    "daily_run.py": "714c2e23d3046db9a5e8550e348b79fc",
+    "weekly_report.py": "e5168637d51c4f8a735555006e364c35",
+    "weekly_manual_updater.py": "ed0dc1102dfa29f9507f0f4f25ebe88e",
     "monitor_accounts.json": "36819c865af98e73f9ee891d35841d9c"
   },
   "changelog": [
+    {
+      "version": "3.10.0",
+      "date": "2026-07-03",
+      "type": "minor",
+      "changes": [
+        "每日拆解資料更新",
+        "腳本更新：viral_factory.py, script_scorer.py, script_distributor.py, daily_run.py, weekly_report.py, weekly_manual_updater.py",
+        "今日拆解：成功 6 支（有機 + Meta廣告）",
+        "評分分佈：{'5分': 2, '4分': 4, '3分': 0, '2分': 0, '1分': 0}",
+        "高分入庫（35庫）：6 支"
+      ]
+    },
+    {
+      "version": "3.9.0",
+      "date": "2026-07-02",
+      "type": "minor",
+      "changes": [
+        "每日拆解資料更新",
+        "腳本更新：viral_factory.py, script_distributor.py, daily_run.py",
+        "今日拆解：成功 6 支（有機 + Meta廣告）",
+        "評分分佈：{'5分': 1, '4分': 5, '3分': 0, '2分': 0, '1分': 0}",
+        "高分入庫（35庫）：6 支"
+      ]
+    },
+    {
+      "version": "3.8.0",
+      "date": "2026-07-02",
+      "type": "minor",
+      "changes": [
+        "每日拆解資料更新",
+        "腳本更新：viral_factory.py",
+        "今日拆解：成功 5 支（有機 + Meta廣告）",
+        "評分分佈：{'5分': 0, '4分': 5, '3分': 0, '2分': 0, '1分': 0}",
+        "高分入庫（35庫）：5 支"
+      ]
+    },
+    {
+      "version": "3.7.0",
+      "date": "2026-07-02",
+      "type": "minor",
+      "changes": [
+        "每日拆解資料更新",
+        "腳本更新：viral_factory.py",
+        "今日拆解：成功 6 支（有機 + Meta廣告）",
+        "評分分佈：{'5分': 0, '4分': 6, '3分': 0, '2分': 0, '1分': 0}",
+        "高分入庫（35庫）：6 支"
+      ]
+    },
+    {
+      "version": "3.6.0",
+      "date": "2026-07-02",
+      "type": "minor",
+      "changes": [
+        "每日拆解資料更新",
+        "腳本更新：viral_factory.py, daily_run.py",
+        "今日拆解：成功 0 支（有機 + Meta廣告）",
+        "評分分佈：{'5分': 0, '4分': 0, '3分': 0, '2分': 0, '1分': 0}",
+        "高分入庫（35庫）：0 支"
+      ]
+    },
+    {
+      "version": "3.5.1",
+      "date": "2026-07-01",
+      "type": "patch",
+      "changes": [
+        "今日拆解：成功 6 支（有機 + Meta廣告）",
+        "評分分佈：{'5分': 0, '4分': 6, '3分': 0, '2分': 0, '1分': 0}",
+        "高分入庫（35庫）：6 支"
+      ]
+    },
     {
       "version": "3.5.0",
       "date": "2026-06-30",

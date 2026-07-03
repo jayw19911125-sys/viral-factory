@@ -182,16 +182,25 @@ def build_analysis_data(entries: list) -> str:
 
 
 def analyze_with_gpt(data_text: str, count: int) -> dict:
-    """用 GPT 分析跨影片共同規律"""
-    client = OpenAI()
+    """用 GPT 分析跨影片共同規律（使用沙盒免費代理）"""
+    client = OpenAI(
+        api_key=os.environ.get("OPENAI_API_KEY", ""),
+        base_url=os.environ.get("OPENAI_API_BASE", "https://api.openai.com/v1")
+    )
     prompt = WEEKLY_ANALYSIS_PROMPT.format(data=data_text, count=count)
     response = client.chat.completions.create(
         model="gpt-4.1-mini",
         messages=[{"role": "user", "content": prompt}],
         response_format={"type": "json_object"},
-        temperature=0.3
+        temperature=0.3,
+        max_tokens=2000,  # 週報輸出較長，2000 token 足夠
     )
-    return json.loads(response.choices[0].message.content)
+    raw = response.choices[0].message.content
+    # 防護：移除 GPT 偶爾輸出的 Markdown 代碼塊標記
+    if raw.strip().startswith("```"):
+        lines = raw.strip().split("\n")
+        raw = "\n".join(lines[1:-1] if lines[-1].strip() == "```" else lines[1:])
+    return json.loads(raw)
 
 
 def send_weekly_report_to_slack(analysis: dict, count: int, week_str: str):

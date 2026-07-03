@@ -8,7 +8,11 @@ import os
 import json
 from openai import OpenAI
 
-client = OpenAI()
+# 使用沙盒免費代理（與 viral_factory.py 一致），避免消耗子權的 OpenAI 額度
+client = OpenAI(
+    api_key=os.environ.get("OPENAI_API_KEY", ""),
+    base_url=os.environ.get("OPENAI_API_BASE", "https://api.openai.com/v1")
+)
 
 SCORE_PROMPT = """
 你是台灣頂尖短影音策略師，專門評估影片的爆款潛力與熱門程度。
@@ -71,6 +75,7 @@ def score_video(video_data: dict) -> dict:
             messages=[{"role": "user", "content": prompt}],
             response_format={"type": "json_object"},
             temperature=0.3,
+            max_tokens=800,  # 評分輸出簡短，800 token 足夠
         )
         raw_content = response.choices[0].message.content
         # 防護：移除 GPT 偶爾輸出的 Markdown 代碼塊標記（```json ... ```）

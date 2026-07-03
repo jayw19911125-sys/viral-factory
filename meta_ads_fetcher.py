@@ -21,6 +21,7 @@ import os
 import json
 import time
 import random
+import subprocess
 import requests
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -230,10 +231,12 @@ def search_meta_ads(keyword: str, limit: int = MAX_QUERY_LIMIT) -> list:
         if "error" in data:
             err = data["error"]
             err_msg = err.get("error_user_msg") or err.get("message", "未知錯誤")
+            err_code = err.get("code", 0)
             print(f"  ❌ Meta API 錯誤（{keyword}）：{err_msg}")
-            # 如果是權限問題，回傳模擬資料
-            if err.get("code") in [10, 190]:
-                print(f"  ⚠️  權限不足，使用模擬資料（請完成 Ad Library API 申請）")
+            # Token 過期（190）或權限不足（10）：發送 Slack 警告給子權
+            if err_code in [10, 190]:
+                _notify_token_expired(err_msg, err_code)
+                print(f"  ⚠️  Token 過期或權限不足，使用模擬資料")
                 return _get_mock_ads(keyword)
             return []
 
@@ -242,6 +245,39 @@ def search_meta_ads(keyword: str, limit: int = MAX_QUERY_LIMIT) -> list:
     except requests.exceptions.RequestException as e:
         print(f"  ❌ Meta API 連線失敗（{keyword}）：{e}")
         return []
+
+
+# 已發送警告的 flag，同一次執行只發一次
+_token_alert_sent = False
+
+
+def _notify_token_expired(err_msg: str, err_code: int):
+    """發送 Slack DM 給子權，通知 Meta Token 需要更新"""
+    global _token_alert_sent
+    if _token_alert_sent:
+        return  # 同一次執行只發一次
+    _token_alert_sent = True
+    slack_token = os.environ.get("SLACK_BOT_TOKEN", "")
+    ziquan_id   = os.environ.get("SLACK_ZIQUAN_ID", "U07MHPJKQ8V")
+    if not slack_token:
+        print(f"  ⚠️  Meta Token 過期（錯誤碼 {err_code}），但 SLACK_BOT_TOKEN 未設定，無法發送警告")
+        return
+    msg = (
+        f"🚨 *Meta Access Token 需要更新*\n"
+        f"錯誤碼：{err_code} | {err_msg}\n"
+        f"請前往 Meta Business Manager 重新產生 Token，\n"
+        f"再更新 `/home/ubuntu/viral_factory/.env` 的 `META_ACCESS_TOKEN` 欄位"
+    )
+    cmd = [
+        "manus-mcp-cli", "tool", "call", "slack_send_dm",
+        "--server", "slack",
+        "--input", json.dumps({"user_id": ziquan_id, "message": msg})
+    ]
+    try:
+        subprocess.run(cmd, capture_output=True, text=True, timeout=15)
+        print(f"  📨 Meta Token 過期警告已發送給子權")
+    except Exception as e:
+        print(f"  ⚠️  Slack 警告發送失敗：{e}")
 
 
 def _get_mock_ads(keyword: str) -> list:

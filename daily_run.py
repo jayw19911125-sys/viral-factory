@@ -71,6 +71,7 @@ def _check_env() -> bool:
         "OPENAI_API_KEY": "備用：直接呼叫 OpenAI API 時使用（目前主流程不需要）",
         "META_ACCESS_TOKEN": "用於 Meta 廣告庫拆取（缺少則僅有機內容）",
         "WHISPER_AVAILABLE": "控制是否啟用轉錄（預設 true）",
+        "SLACK_BOT_TOKEN": "用於發送 Slack DM 與頻道通知（缺少則所有通知都會失敗）",
     }
     all_ok = True
     for key, desc in required.items():
