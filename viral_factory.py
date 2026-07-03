@@ -352,7 +352,8 @@ def write_to_notion_via_mcp(url: str, platform: str, transcript: str, analysis: 
         INDUSTRY_TO_NOTION.get(t, "其他") for t in raw_tags
         if INDUSTRY_TO_NOTION.get(t, "其他") in NOTION_VALID_TAGS
     )) or ["其他"]
-    tags_json = ",".join(tags)  # Notion MCP multi_select 用逗號分隔字串
+    # Notion MCP multi_select 只接受單一字串，取第一個最相關的標籤
+    tags_json = tags[0] if tags else "其他"
 
     # 結構化標籤欄位（對應 Notion 選項）
     valid_hook_types = ["疑問式", "否定式", "衝突式", "數字式", "警告式", "揭秘式", "前後對比式", "大膽宣言式"]
