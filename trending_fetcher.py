@@ -10,8 +10,8 @@
 5. 每日拆解目標：6 支（每週 30 支）
 
 資料儲存：
-- /home/ubuntu/viral_factory/data/weekly_YYYYWW.json  每週累積數據
-- /home/ubuntu/viral_factory/data/snapshots/YYYYMMDD_HH.json  每次快照
+- <專案目錄>/data/weekly_YYYYWW.json  每週累積數據
+- <專案目錄>/data/snapshots/YYYYMMDD_HH.json  每次快照
 """
 
 import subprocess
@@ -26,11 +26,13 @@ from pathlib import Path
 DAILY_TARGET        = 6       # 每日送入拆解的影片數
 ANOMALY_MULTIPLIER  = 3.0     # 觀看數超過帳號平均值幾倍才算異常
 ANOMALY_WINDOW_HOURS = 48     # 異常偵測時間窗口（小時）
-MONITOR_FILE        = Path("/home/ubuntu/viral_factory/monitor_accounts.json")
-DATA_DIR            = Path("/home/ubuntu/viral_factory/data")
+# 動態計算路徑，避免硬編碼 /home/ubuntu 導致環境移植失敗
+BASE_DIR            = Path(__file__).resolve().parent
+MONITOR_FILE        = BASE_DIR / "monitor_accounts.json"
+DATA_DIR            = BASE_DIR / "data"
 SNAPSHOT_DIR        = DATA_DIR / "snapshots"
-LOG_DIR             = Path("/home/ubuntu/viral_factory/logs")
-MANUAL_QUEUE_FILE   = Path("/home/ubuntu/viral_factory/manual_queue.txt")
+LOG_DIR             = BASE_DIR / "logs"
+MANUAL_QUEUE_FILE   = BASE_DIR / "manual_queue.txt"
 
 # ─── 工具函數 ─────────────────────────────────────────────
 

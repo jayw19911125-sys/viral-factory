@@ -27,7 +27,7 @@ from openai import OpenAI
 # ─── 設定區 ───────────────────────────────────────────────
 SLACK_TEAM_CH   = os.environ.get("SLACK_TEAM_CH",   "C0AQG307XJT")   # #all-團隊主頻道
 SLACK_AWEI_ID   = os.environ.get("SLACK_AWEI_ID",   "U0B4FG0ER89")   # 阿韋 DM
-SLACK_ZIQUAN_ID = os.environ.get("SLACK_ZIQUAN_ID", "U07MHPJKQ8V")   # 子權 DM（COO）
+SLACK_ZIQUAN_ID = os.environ.get("SLACK_ZIQUAN_ID", "U0ARRQS3XPS")   # 子權 DM（COO，Dennis；已驗證 Slack ID）
 
 # Notion 庫房 ID（更改庫房時只需改 .env）
 NOTION_DB = {
@@ -42,9 +42,11 @@ NOTION_DB = {
 }
 
 # 修復缺陷4：統一使用 notion_visual_manual.md（與 manual_version_tracker.py 一致）
-MANUAL_PATH = Path("/home/ubuntu/viral_factory/notion_visual_manual.md")
-PDF_PATH    = Path("/home/ubuntu/viral_factory/爆款短影音拆解工廠v3.0_團隊操作手冊.pdf")
-DATA_DIR    = Path("/home/ubuntu/viral_factory/data")
+# 動態計算路徑，避免硬編碼 /home/ubuntu 導致環境移植失敗
+BASE_DIR    = Path(__file__).resolve().parent
+MANUAL_PATH = BASE_DIR / "notion_visual_manual.md"
+PDF_PATH    = BASE_DIR / "爆款短影音拆解工廠v3.0_團隊操作手冊.pdf"
+DATA_DIR    = BASE_DIR / "data"
 
 client = OpenAI()
 

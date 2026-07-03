@@ -34,7 +34,9 @@ MAX_QUERY_LIMIT   = 25         # 每次 API 查詢最多取幾筆
 TOTAL_ROUNDS      = 2          # 總輪數
 COUNTRY_LABEL     = "🌍 國外廣告（英國）"   # 所有 Meta 廣告統一標註
 
-DATA_DIR       = Path("/home/ubuntu/viral_factory/data")
+# 動態計算路徑，避免硬編碼 /home/ubuntu 導致環境移植失敗
+BASE_DIR       = Path(__file__).resolve().parent
+DATA_DIR       = BASE_DIR / "data"
 PROGRESS_FILE  = DATA_DIR / "meta_industry_progress.json"
 
 # ─── 英國市場產業清單（英文關鍵字）────────────────────────
