@@ -1,7 +1,7 @@
 # 爆款短影音拆解工廠 - Python 依賴
 # 實際 import 的第三方套件（標準庫不列入）
 
-openai>=1.0,<2.0        # GPT 拆解（經沙盒代理呼叫，gpt-4.1-mini）
+openai>=2.45.0,<3.0        # GPT 拆解（經沙盒代理呼叫，gpt-4.1-mini）
 requests>=2.31,<3.0     # Meta Ad Library API 呼叫
 
 # 以 subprocess 呼叫的外部工具（非 import，但執行時必要）
