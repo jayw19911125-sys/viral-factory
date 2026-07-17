@@ -8,12 +8,6 @@ import os
 import json
 from openai import OpenAI
 
-# 使用沙盒免費代理（與 viral_factory.py 一致），避免消耗子權的 OpenAI 額度
-client = OpenAI(
-    api_key=os.environ.get("OPENAI_API_KEY", ""),
-    base_url=os.environ.get("OPENAI_API_BASE", "https://api.openai.com/v1")
-)
-
 SCORE_PROMPT = """
 你是台灣頂尖短影音策略師，專門評估影片的爆款潛力與熱門程度。
 
@@ -58,6 +52,29 @@ def score_video(video_data: dict) -> dict:
     video_data 需包含：title, platform, viral_data, transcript, hook, visual_hammer, script_structure, source_type
     回傳：score(int), score_label, content_type, score_reason, key_strength, improvement
     """
+    # A score is not allowed when core evidence is missing.  In particular, the
+    # model must not invent popularity from its own prior analysis.
+    if video_data.get("evidence_status") != "verified":
+        return {
+            "score": None,
+            "score_status": "insufficient_evidence",
+            "score_label": "未評分",
+            "content_type": None,
+            "score_reason": "缺少可驗證的觀看、逐字稿或畫面證據",
+            "key_strength": None,
+            "improvement": "補齊來源證據後再評分",
+        }
+    if not video_data.get("viral_data") or not video_data.get("transcript"):
+        return {
+            "score": None,
+            "score_status": "missing_input",
+            "score_label": "未評分",
+            "content_type": None,
+            "score_reason": "評分輸入不完整",
+            "key_strength": None,
+            "improvement": "補齊爆款數據與逐字稿",
+        }
+
     prompt = SCORE_PROMPT.format(
         title=video_data.get("title", ""),
         platform=video_data.get("platform", ""),
@@ -70,6 +87,12 @@ def score_video(video_data: dict) -> dict:
     )
 
     try:
+        # Lazy initialization keeps import and data-quality checks independent
+        # from network/proxy configuration.
+        client = OpenAI(
+            api_key=os.environ.get("OPENAI_API_KEY", ""),
+            base_url=os.environ.get("OPENAI_API_BASE", "https://api.openai.com/v1")
+        )
         response = client.chat.completions.create(
             model="gpt-4.1-mini",
             messages=[{"role": "user", "content": prompt}],
@@ -83,22 +106,30 @@ def score_video(video_data: dict) -> dict:
             lines = raw_content.strip().split("\n")
             raw_content = "\n".join(lines[1:-1] if lines[-1].strip() == "```" else lines[1:])
         result = json.loads(raw_content)
+        score = result.get("score")
+        if not isinstance(score, int) or isinstance(score, bool) or not 1 <= score <= 5:
+            raise ValueError(f"invalid score: {score!r}")
+        if result.get("content_type") not in {"IP型", "導購型"}:
+            raise ValueError(f"invalid content_type: {result.get('content_type')!r}")
+        result["score_status"] = "scored"
         return result
     except Exception as e:
         print(f"[評分失敗] {e}")
         return {
-            "score": 3,
-            "score_label": "3分中",
-            "content_type": "IP型",
-            "score_reason": "評分失敗，預設中等分數",
-            "key_strength": "無法判斷",
-            "improvement": "無法判斷",
+            "score": None,
+            "score_status": "technical_error",
+            "score_label": "未評分（系統錯誤）",
+            "content_type": None,
+            "score_reason": f"評分失敗：{type(e).__name__}",
+            "key_strength": None,
+            "improvement": "修復評分服務後重試",
         }
 
 
 def is_high_score(score_result: dict) -> bool:
     """判斷是否為高分影片（4分或5分）"""
-    return score_result.get("score", 0) >= 4
+    score = score_result.get("score")
+    return isinstance(score, int) and not isinstance(score, bool) and score >= 4
 
 
 if __name__ == "__main__":

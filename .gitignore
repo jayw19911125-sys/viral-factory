@@ -17,6 +17,7 @@ manual_queue.txt
 __pycache__/
 *.pyc
 *.pyo
+.test-deps/
 
 # 日誌
 logs/

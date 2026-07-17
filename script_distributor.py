@@ -50,11 +50,8 @@ def _parse_notion_url(stdout: str, db_key: str) -> str:
       Tool execution result saved to: /path/to/file
       Tool execution result:
       {JSON}
-    回傳真實 URL 或由 ID 建構的 URL，失敗時回傳庫房首頁 URL
+    回傳真實 URL 或由新頁 ID 建構的 URL；解析失敗必須回傳空字串。
     """
-    db_id = NOTION_DB_IDS.get(db_key, "")
-    fallback_url = f"https://notion.so/{db_id.replace('-', '')}" if db_id else "https://notion.so"
-
     try:
         raw = stdout
         marker = "Tool execution result:\n"
@@ -71,7 +68,7 @@ def _parse_notion_url(stdout: str, db_key: str) -> str:
                     break
 
         if not json_str:
-            return fallback_url
+            return ""
 
         data = json.loads(json_str)
 
@@ -98,7 +95,7 @@ def _parse_notion_url(stdout: str, db_key: str) -> str:
     except Exception:
         pass
 
-    return fallback_url
+    return ""
 
 
 def call_notion_mcp(tool_name: str, input_data: dict, db_key: str = "") -> dict:
@@ -128,6 +125,13 @@ def call_notion_mcp(tool_name: str, input_data: dict, db_key: str = "") -> dict:
             return {"success": False, "url": "", "error": result.stderr[:200]}
 
         page_url = _parse_notion_url(result.stdout, db_key)
+        if not page_url:
+            return {
+                "success": False,
+                "url": "",
+                "error": "Notion 回傳成功碼但沒有可驗證的新頁 URL",
+                "raw_output": result.stdout[:500],
+            }
         return {"success": True, "url": page_url, "raw_output": result.stdout[:500]}
 
     except Exception as e:
@@ -426,42 +430,59 @@ def distribute_video(analysis: dict, source_url: str = "") -> dict:
 
     library_urls = {}
 
+    # 03-07/35 are reusable knowledge assets.  Text-only or otherwise
+    # unverified analysis may stay quarantined in the run log, but must not be
+    # promoted into these libraries.
+    if analysis.get("evidence_status") != "verified":
+        return {
+            "score_result": {
+                "score": None,
+                "score_status": "insufficient_evidence",
+                "score_label": "未評分",
+                "content_type": None,
+                "score_reason": "證據未通過發布閘門",
+            },
+            "library_urls": {},
+            "distribution_status": "blocked_by_evidence_gate",
+        }
+
     # Step 1：評分
     hook_data = analysis.get("鉤子類型與設計", {})
     visual_data = analysis.get("視覺錘分析", {})
     structure_data = analysis.get("影片結構拆解", {})
-    score_result = score_video({
-        "title": analysis.get("影片標題或主題", "") or analysis.get("title", ""),
-        "platform": analysis.get("平台", "") or analysis.get("platform", ""),
-        "viral_data": analysis.get("爆款數據", "") or analysis.get("viral_data", ""),
-        "transcript": analysis.get("逐字稿", "") or analysis.get("transcript", ""),
-        "hook": str(hook_data) if hook_data else analysis.get("鉤子類型與設計", ""),
-        "visual_hammer": str(visual_data) if visual_data else analysis.get("視覺錘分析", ""),
-        "script_structure": str(structure_data) if structure_data else analysis.get("影片結構拆解", ""),
-        "source_type": analysis.get("source_type", "有機熱門"),
-    })
+    score_result = analysis.get("_score_result")
+    if not isinstance(score_result, dict):
+        score_result = score_video({
+            "title": analysis.get("影片標題或主題", "") or analysis.get("title", ""),
+            "platform": analysis.get("平台", "") or analysis.get("platform", ""),
+            "viral_data": analysis.get("爆款數據", "") or analysis.get("viral_data", ""),
+            "transcript": analysis.get("逐字稿", "") or analysis.get("transcript", ""),
+            "hook": str(hook_data) if hook_data else analysis.get("鉤子類型與設計", ""),
+            "visual_hammer": str(visual_data) if visual_data else analysis.get("視覺錘分析", ""),
+            "script_structure": str(structure_data) if structure_data else analysis.get("影片結構拆解", ""),
+            "source_type": analysis.get("source_type", "有機熱門"),
+            "evidence_status": analysis.get("evidence_status"),
+        })
     print(f"[評分] {score_result.get('score_label')} | {score_result.get('content_type')} | {score_result.get('score_reason')}")
 
-    # Step 2：無論評分高低，都寫入各素材庫（收集每個庫的真實 URL）
-    url_03 = write_to_hook_library(analysis, source_url)
-    if url_03:
-        library_urls["03｜開頭鉤子庫"] = url_03
-
-    url_04 = write_to_cta_library(analysis, source_url)
-    if url_04:
-        library_urls["04｜結尾呼籲庫"] = url_04
-
-    url_05 = write_to_structure_library(analysis, source_url)
-    if url_05:
-        library_urls["05｜腳本結構庫"] = url_05
-
-    url_06 = write_to_visual_hammer_library(analysis, source_url)
-    if url_06:
-        library_urls["06｜視覺錘庫"] = url_06
-
-    url_07 = write_to_language_nail_library(analysis, source_url)
-    if url_07:
-        library_urls["07｜語言釘庫"] = url_07
+    # Step 2：每個預期庫都必須回傳可驗證 URL；空字串不是成功。
+    failures = []
+    for display_name, writer in (
+        ("03｜開頭鉤子庫", write_to_hook_library),
+        ("04｜結尾呼籲庫", write_to_cta_library),
+        ("05｜腳本結構庫", write_to_structure_library),
+        ("06｜視覺錘庫", write_to_visual_hammer_library),
+        ("07｜語言釘庫", write_to_language_nail_library),
+    ):
+        try:
+            page_url = writer(analysis, source_url)
+        except Exception as exc:
+            page_url = ""
+            failures.append({"library": display_name, "error": f"{type(exc).__name__}: {exc}"})
+        if page_url:
+            library_urls[display_name] = page_url
+        elif not any(row["library"] == display_name for row in failures):
+            failures.append({"library": display_name, "error": "missing_verified_page_url"})
 
     # Step 3：只有高分（4-5分）才寫入 35 號腳本庫
     if is_high_score(score_result):
@@ -470,13 +491,18 @@ def distribute_video(analysis: dict, source_url: str = "") -> dict:
             content_type = score_result.get("content_type", "IP型")
             lib_key = "35｜IP型腳本庫" if content_type == "IP型" else "35｜導購型腳本庫"
             library_urls[lib_key] = url_35
-        print(f"[✓] 高分影片，已寫入 35｜已驗證熱門腳本庫")
+            print(f"[✓] 高分影片，已寫入 35｜已驗證熱門腳本庫")
+        else:
+            print("[✗] 高分影片的 35 庫寫入未獲可驗證頁面 URL")
+            failures.append({"library": "35｜已驗證熱門腳本庫", "error": "missing_verified_page_url"})
     else:
         print(f"[跳過] 評分 {score_result.get('score')} 分，不寫入腳本庫")
 
     return {
         "score_result": score_result,
-        "library_urls": library_urls
+        "library_urls": library_urls,
+        "distribution_status": "completed" if not failures else "partial_failure",
+        "distribution_failures": failures,
     }
 
 
