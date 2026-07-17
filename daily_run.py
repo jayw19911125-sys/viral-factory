@@ -27,6 +27,7 @@
 import sys
 import os
 import logging
+import uuid
 from datetime import datetime
 from pathlib import Path
 
@@ -36,8 +37,8 @@ BASE_DIR = Path(__file__).resolve().parent
 # 確保可以 import 同目錄的模組
 sys.path.insert(0, str(BASE_DIR))
 
-from trending_fetcher import get_daily_urls
-from viral_factory import process_batch
+from trending_fetcher import acknowledge_manual_queue, get_daily_urls
+from viral_factory import process_batch, send_batch_reports, send_slack_dm
 from weekly_report import run_weekly_report
 from meta_ads_fetcher import get_meta_ad_urls_simple
 from script_distributor import distribute_video
@@ -90,8 +91,10 @@ def _check_env() -> bool:
 
 def main():
     start_time = datetime.now()
+    run_id = f"run-{datetime.now().astimezone().strftime('%Y%m%dT%H%M%S')}-{uuid.uuid4().hex[:8]}"
     logger.info("=" * 60)
     logger.info(f"爆款短影音拆解工廠 v3.0 啟動 | {start_time.strftime('%Y-%m-%d %H:%M')}")
+    logger.info(f"run_id={run_id}")
     logger.info("雙來源系統：TikTok/Reels 有機內容 + Meta 廣告素材")
     logger.info("新增：評分系統 + 素材自動分配（03/04/05/06/07/35 庫）")
     logger.info("=" * 60)
@@ -130,7 +133,8 @@ def main():
         urls = organic_urls + meta_urls
 
         if not urls:
-            logger.warning("今日無待拆影片，任務結束")
+            logger.warning("今日無待拆影片；仍發送零輸入健康狀態，不得靜默結束")
+            send_batch_reports([], run_id)
             return
 
         logger.info(
@@ -140,7 +144,9 @@ def main():
 
         # Step 2：批次拆解（雙來源合併處理）
         logger.info("\n[Step 2] 開始批次拆解（雙來源）...")
-        results = process_batch(urls, whisper_available=WHISPER_AVAILABLE)
+        results = process_batch(urls, whisper_available=WHISPER_AVAILABLE, run_id=run_id)
+        removed_manual = acknowledge_manual_queue(results)
+        logger.info(f"手動待拆清單已確認移除 {removed_manual} 筆終態項目；失敗／隔離項目保留待重試")
 
         # Step 3：統計拆解結果
         success_results = [r for r in results if r.get("success")]
@@ -151,7 +157,7 @@ def main():
         # Step 4 & 5 & 6：評分 + 素材分配（每支成功拆解的影片）
         logger.info("\n[Step 4-6] 開始評分與素材分配...")
 
-        score_summary = {"5分": 0, "4分": 0, "3分": 0, "2分": 0, "1分": 0}
+        score_summary = {"5分": 0, "4分": 0, "3分": 0, "2分": 0, "1分": 0, "未評分": 0}
         type_summary = {"IP型": 0, "導購型": 0}
         high_score_count = 0
 
@@ -177,10 +183,15 @@ def main():
 
                 # 把庫房連結寫回 result，讓 process_batch 的日報可以用
                 result["library_urls"] = library_urls
+                result["score"] = score_result.get("score")
+                result["score_label"] = score_result.get("score_label", "未評分")
+                result["score_status"] = score_result.get("score_status", "unknown")
+                result["distribution_status"] = dist_result.get("distribution_status", "unknown") if isinstance(dist_result, dict) else "unknown"
+                result["distribution_failures"] = dist_result.get("distribution_failures", []) if isinstance(dist_result, dict) else []
 
                 # 統計評分
-                score = score_result.get("score", 0)
-                content_type = score_result.get("content_type", "IP型")
+                score = score_result.get("score")
+                content_type = score_result.get("content_type")
 
                 if score == 5:
                     score_summary["5分"] += 1
@@ -190,42 +201,66 @@ def main():
                     score_summary["3分"] += 1
                 elif score == 2:
                     score_summary["2分"] += 1
-                else:
+                elif score == 1:
                     score_summary["1分"] += 1
+                else:
+                    score_summary["未評分"] += 1
 
                 if content_type in type_summary:
                     type_summary[content_type] += 1
 
-                if score >= 4:
+                if any(key.startswith("35｜") for key in library_urls):
                     high_score_count += 1
 
                 lib_summary = ' | '.join([f"{k}" for k in library_urls.keys()]) if library_urls else "無"
-                logger.info(
-                    f"[✓] 分配完成：{analysis.get('title', '')[:30]} | "
+                log_method = logger.info if result["distribution_status"] == "completed" else logger.error
+                log_method(
+                    f"[{'✓' if result['distribution_status'] == 'completed' else '✗'}] 分配{result['distribution_status']}：{analysis.get('影片標題或主題', '')[:30]} | "
                     f"{score_result.get('score_label')} | {content_type} | "
                     f"素材庫：{lib_summary}"
                 )
 
             except Exception as e:
                 logger.error(f"[✗] 素材分配失敗：{source_url[:50]} | {e}", exc_info=True)
+                # 02 主庫已經 read-back 成功，不能倒寫成「入庫失敗」。
+                # 下游分配以獨立狀態呈現，讓日報可同時說清楚兩件事。
+                result["distribution_status"] = "technical_error"
+                result["distribution_error"] = str(e)
 
         # Step 7：最終統計日報
+        final_success_results = [r for r in results if r.get("success")]
+        final_non_success = [r for r in results if not r.get("success")]
         elapsed = (datetime.now() - start_time).seconds
         logger.info(f"\n{'='*60}")
         logger.info(f"任務完成 | 耗時 {elapsed}s")
-        logger.info(f"拆解：成功 {len(success_results)} 支 | 失敗/跳過 {len(failed_results)} 支")
-        logger.info(f"  有機內容：{sum(1 for r in success_results if r.get('url','') in organic_urls)} 支")
-        logger.info(f"  Meta廣告（英國）：{sum(1 for r in success_results if r.get('url','') in meta_urls)} 支")
+        logger.info(f"唯一有效成功：{len(final_success_results)} 支 | 非成功：{len(final_non_success)} 支")
+        logger.info(f"  有機內容：{sum(1 for r in final_success_results if r.get('url','') in organic_urls)} 支")
+        logger.info(f"  Meta廣告（英國）：{sum(1 for r in final_success_results if r.get('url','') in meta_urls)} 支")
         logger.info(f"評分分佈：{score_summary}")
         logger.info(f"類型分佈：{type_summary}")
         logger.info(f"高分入庫（35庫）：{high_score_count} 支")
         logger.info(f"{'='*60}")
 
+        logger.info("\n[Step 7] 評分與分配完成後才發送日報...")
+        report_status = send_batch_reports(results, run_id)
+        if not report_status["daily"].get("success"):
+            logger.error(f"日報發送失敗：{report_status['daily'].get('error')}")
+        if not report_status["health"].get("success"):
+            logger.error(f"健康摘要發送失敗：{report_status['health'].get('error')}")
+
         # 週五額外執行週報分析
-        if datetime.now().weekday() == 4:  # 4 = 週五
+        if (
+            datetime.now().weekday() == 4
+            and os.environ.get("RUN_WEEKLY_INSIDE_DAILY", "false").lower() == "true"
+        ):
             logger.info("\n[週五任務] 開始執行爆款規律週報分析...")
-            run_weekly_report()
-            logger.info("週報分析完成，已發送至 Slack 團隊主頻道")
+            weekly_result = run_weekly_report()
+            if weekly_result.get("success"):
+                logger.info(f"週報完成：{weekly_result.get('status')}")
+            else:
+                logger.error(f"週報被資料閘門阻擋：{weekly_result.get('error')}")
+        elif datetime.now().weekday() == 4:
+            logger.info("週報內嵌排程已停用；僅允許一個獨立週報排程")
 
         # ─── 手冊版本自動更新 ─────────────────────────────────
         # 每次拆解完成後自動偵測：
@@ -233,23 +268,41 @@ def main():
         #   - 若只有資料更新 → bump patch（靜默更新，不發通知）
         logger.info("\n[手冊更新] 自動偵測版本變動...")
         try:
-            patch_changes = [
-                f"今日拆解：成功 {len(success_results)} 支（有機 + Meta廣告）",
-                f"評分分佈：{score_summary}",
-                f"高分入庫（35庫）：{high_score_count} 支"
-            ]
-            new_version = auto_detect_and_update(
-                reason="每日拆解資料更新",
-                changes=patch_changes,
-                notify_slack=True  # minor 版才會發通知，patch 靜默
-            )
-            logger.info(f"手冊已更新至 v{new_version}")
+            if os.environ.get("AUTO_UPDATE_MANUAL", "false").lower() != "true":
+                logger.info("手冊自動改寫已停用；正式 SOP 必須經人審後更新")
+            else:
+                patch_changes = [
+                    f"今日唯一有效新增：{len(final_success_results)} 支（有機 + Meta廣告）",
+                    f"評分分佈：{score_summary}",
+                    f"高分入庫（35庫）：{high_score_count} 支"
+                ]
+                new_version = auto_detect_and_update(
+                    reason="經核准的爆款系統資料更新",
+                    changes=patch_changes,
+                    notify_slack=True
+                )
+                logger.info(f"手冊已更新至 v{new_version}")
         except Exception as e:
             logger.warning(f"手冊版本更新失敗（不影響主流程）：{e}")
         # ─────────────────────────────────────────────────────
 
     except Exception as e:
         logger.error(f"排程執行失敗：{e}", exc_info=True)
+        try:
+            alert = (
+                f"⛔ *爆款資料管線排程失敗*\n"
+                f"run_id：`{run_id}`\n"
+                f"error：{type(e).__name__}: {str(e)[:500]}\n"
+                "本訊息只代表系統錯誤，沒有任何入庫成功推定。"
+            )
+            send_result = send_slack_dm(
+                alert,
+                channel=os.environ.get("SLACK_DENNIS_ID", "U0ARRQS3XPS"),
+            )
+            if not send_result.get("success"):
+                logger.error(f"排程失敗警示亦發送失敗：{send_result.get('error')}")
+        except Exception as alert_exc:
+            logger.error(f"排程失敗警示異常：{alert_exc}", exc_info=True)
         raise
 
 
@@ -258,13 +311,23 @@ def _send_management_report():
     print("\n" + "="*50)
     print(f"📊 正在生成管理日報並發送至 Slack...")
     try:
+        from ack_collector import collect_acknowledgements
         from management_report import generate_management_report
         from viral_factory import send_slack_dm
 
+        ack_summary = collect_acknowledgements()
+        print(
+            "  ACK collector："
+            f"tracked={ack_summary['tracked']} | confirmed={ack_summary['confirmed']} | "
+            f"no_ack={ack_summary['no_ack']} | errors={len(ack_summary['errors'])}"
+        )
         mgt_report = generate_management_report()
         # 發送到主頻道（從環境變數讀取，不硬編碼）
-        send_slack_dm(mgt_report, channel=os.environ.get("SLACK_TEAM_CH", "C0AQG307XJT"))
-        print("  ✅ 管理日報已發送至 Slack")
+        send_result = send_slack_dm(mgt_report, channel=os.environ.get("SLACK_TEAM_CH", "C0AQG307XJT"))
+        if send_result.get("success"):
+            print(f"  ✅ 管理日報已送出（{send_result.get('status')}）")
+        else:
+            print(f"  ❌ 管理日報發送失敗：{send_result.get('error')}")
     except Exception as e:
         print(f"  ⚠️ 管理日報發送失敗: {e}")
     print("="*50)
@@ -279,7 +342,11 @@ if __name__ == "__main__":
         logger.error(f"每日排程失敗：{e}", exc_info=True)
         exit_code = 1
     finally:
-        # 無論成功或失敗，管理日報一律發送
-        _send_management_report()
+        # P0：管理日報不可在通知後立即把送出誤稱為確認。
+        # 待獨立 ACK collector 於合理視窗後執行時再開啟。
+        if os.environ.get("SEND_MANAGEMENT_REPORT_IMMEDIATELY", "false").lower() == "true":
+            _send_management_report()
+        else:
+            logger.info("即時管理日報已停用；等待獨立確認收集流程")
 
     sys.exit(exit_code)
